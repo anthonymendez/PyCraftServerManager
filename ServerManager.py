@@ -187,6 +187,8 @@ class ServerPropertiesHandler:
                 break
         return ""
 
+# https://wiki.vg/Mojang_API#UUID_-.3E_Name_history
+
 class WhitelistHandler:
     """
     Whitelist Handler handles adding, removing, and showing players from the whitelist.
