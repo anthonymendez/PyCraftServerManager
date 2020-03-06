@@ -186,3 +186,33 @@ class ServerPropertiesHandler:
                 return line.split("=")[1].strip()
                 break
         return ""
+
+class WhitelistHandler:
+    """
+    Whitelist Handler handles adding, removing, and showing players from the whitelist.
+    """
+    def __init__(self, ServerRunner):
+        """
+        Initializes Server Properties Handler by tying it to a ServerRunner.
+        """
+        # Check to make sure ServerRunner is valid object
+        if not isinstance(ServerRunner, VanillaServerRunner):
+            return "Error, not valid ServerRunner!\n%s" % (str(ServerRunner))
+        # Store all current server properties
+        self.ServerRunner = ServerRunner
+
+    def get_players(self):
+        # TODO: Return list of player strings
+        return ""
+
+    def get_players_uuid(self):
+        # TODO: Return list players with their UUID
+        return ""
+
+    def remove_player(self, player_name):
+        # TODO: Remove player from whitelist
+        ""
+
+    def add_player(self, player_name):
+        # TODO: Remove player from whitelist
+        ""
