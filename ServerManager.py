@@ -2,9 +2,8 @@ import os
 
 class VanillaServerRunner:
     """
-    Server runner handles launching of Minecraft Server 
-    jar, and configuring the launch parameters.\n
-    TODO: Allow optional arguments for launch options (ram, nogui, etc.)
+    Vanilla Server Runner handles launching of the Minecraft 
+    Server jar, and configuring the launch parameters.
     """
     def __init__(self, server_folder, *args, **kwargs):
         """
@@ -58,7 +57,7 @@ class VanillaServerRunner:
         self.server_folder = server_folder
         self.server_dir = os.path.join(self.main_dir, server_folder)
 
-    def get_server_folder_directory(self):
+    def get_server_directory(self):
         """
         Get server folder directory.
         """
@@ -125,3 +124,65 @@ class VanillaServerRunner:
         Returns bool whether server will launch with Java GUI.
         """
         return self.nogui
+
+class ServerPropertiesHandler:
+    """
+    Server Properties Handler handles launching of the setting
+    and retrieval of server.properties file.
+    """
+    # TODO: Store default values of server.properties in file
+    def __init__(self, ServerRunner):
+        """
+        Initializes Server Properties Handler by tying it to a ServerRunner.
+        """
+        # Check to make sure ServerRunner is valid object
+        if not isinstance(ServerRunner, VanillaServerRunner):
+            return "Error, not valid ServerRunner!\n%s" % (str(ServerRunner))
+        # Store all current server properties
+        self.ServerRunner = ServerRunner
+
+    def __read_server_properties_lines(self):
+        """
+        Reads all the lines from the server.properties file.
+        """
+        server_directory = self.ServerRunner.get_server_directory()
+        server_properties_path = os.path.join(server_directory, "server.properties")
+        server_properties_file = open(server_properties_path, "r")
+        server_properties_lines = server_properties_file.readlines()
+        server_properties_file.close()
+        return server_properties_lines
+
+    def __write_server_properties_lines(self, server_properties_lines):
+        """
+        Rewrites to all the lines of the server.properties file.
+        """
+        server_directory = self.ServerRunner.get_server_directory()
+        server_properties_path = os.path.join(server_directory, "server.properties")
+        server_properties_file = open(server_properties_path, "w")
+        server_properties_file.writelines(server_properties_lines)
+        server_properties_file.close()
+
+    def set_property(self, property_name, value):
+        """
+        Sets a specific property value in server.properties.
+        """
+        server_properties_lines = self.__read_server_properties_lines()
+        i = 0
+        for line in server_properties_lines:
+            if property_name in line:
+                break
+            else:
+                i += 1
+        server_properties_lines[i] = "%s=%s\n" % (property_name, str(value).lower())
+        self.__write_server_properties_lines(server_properties_lines)
+    
+    def get_property(self, property_name):
+        """
+        Gets a specific property value in server.properties.
+        """
+        server_properties_lines = self.__read_server_properties_lines()
+        for line in server_properties_lines:
+            if property_name in line:
+                return line.split("=")[1].strip()
+                break
+        return ""
