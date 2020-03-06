@@ -1,6 +1,6 @@
 import os
 
-class ServerRunner:
+class VanillaServerRunner:
     """
     Server runner handles launching of Minecraft Server 
     jar, and configuring the launch parameters.\n

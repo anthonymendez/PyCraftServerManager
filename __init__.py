@@ -1,4 +1,4 @@
-from ServerManager import ServerRunner
+from ServerManager import VanillaServerRunner
 
-ServerRunnerTest = ServerRunner("../Vanilla_Server_Basic/")
-ServerRunnerTest.run()
+VanillaServerRunnerTest = VanillaServerRunner("../Vanilla_Server_Basic/")
+VanillaServerRunnerTest.run()
