@@ -1,4 +1,22 @@
+import requests
+import json
 import os
+
+def player_to_uuid(player_name):
+    """
+    Returns uuid and playername in a json of a given player name.\n
+    Example:\n
+    \tInput: \"Tony_De_Tiger\"\n
+    \tOutput: [{"id":"662a4856593c412ea148acf5d829ef56","name":"Tony_De_Tiger"}]\n
+    """
+    url = "https://api.mojang.com/profiles/minecraft"
+    data = json.dumps(player_name)
+    head = {
+        'Content-type': 'application/json', 
+        'Accept': 'application/json'
+        }
+    r = requests.post(url=url, data=data, headers=head)
+    print(str(r.text))
 
 class VanillaServerRunner:
     """
@@ -186,8 +204,6 @@ class ServerPropertiesHandler:
                 return line.split("=")[1].strip()
                 break
         return ""
-
-# https://wiki.vg/Mojang_API#UUID_-.3E_Name_history
 
 class WhitelistHandler:
     """
