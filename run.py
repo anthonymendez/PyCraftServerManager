@@ -1,6 +1,6 @@
 from ServerRunner.VanillaServerRunner import VanillaServerRunner
-from WhitelistHandler.WhitelistHandler import WhitelistHandler
-from ServerPropertiesHandler.ServerPropertiesHandler import ServerPropertiesHandler
+from Configuration.WhitelistHandler import WhitelistHandler
+from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 
 
 # Server Runner
