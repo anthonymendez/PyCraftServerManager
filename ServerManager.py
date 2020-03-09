@@ -4,10 +4,10 @@ import os
 
 def player_to_uuid(player_name):
     """
-    Returns uuid and playername in a json of a given player name.\n
+    Returns uuid and playername in a dict of a given player name.\n
     Example:\n
     \tInput: \"Tony_De_Tiger\"\n
-    \tOutput: [{"id":"662a4856593c412ea148acf5d829ef56","name":"Tony_De_Tiger"}]\n
+    \tOutput: {"uuid":"662a4856593c412ea148acf5d829ef56","name":"Tony_De_Tiger"}\n
     """
     url = "https://api.mojang.com/profiles/minecraft"
     data = json.dumps(player_name)
@@ -16,7 +16,12 @@ def player_to_uuid(player_name):
         'Accept': 'application/json'
         }
     r = requests.post(url=url, data=data, headers=head)
-    print(str(r.text))
+    uuid_player_json = json.loads(r.content)
+    player_uuid_dict = {
+        "name": uuid_player_json[0]["name"],
+        "uuid": uuid_player_json[0]["id"]
+    }
+    return player_uuid_dict
 
 class VanillaServerRunner:
     """
@@ -209,6 +214,9 @@ class WhitelistHandler:
     """
     Whitelist Handler handles adding, removing, and showing players from the whitelist.
     """
+
+    whitelist_json = "whitelist.json"
+
     def __init__(self, ServerRunner):
         """
         Initializes Server Properties Handler by tying it to a ServerRunner.
@@ -220,17 +228,81 @@ class WhitelistHandler:
         self.ServerRunner = ServerRunner
 
     def get_players(self):
-        # TODO: Return list of player strings
-        return ""
+        """
+        Returns list of player names in whitelist.
+        """
+        player_names = []
+        os.chdir(self.ServerRunner.server_dir)
+        try:
+            with open(WhitelistHandler.whitelist_json) as json_file:
+                whitelist = json.load(json_file)
+                for player_uuid_json in whitelist:
+                    name = player_uuid_json["name"]
+                    player_names.append(name)
+        except json.decoder.JSONDecodeError:
+            print("Couldn't decode JSON")
+        os.chdir(self.ServerRunner.main_dir)
+        return player_names
 
-    def get_players_uuid(self):
-        # TODO: Return list players with their UUID
-        return ""
+    def get_players_uuids(self):
+        """
+        Returns list of player names and their uuid.
+        """
+        player_uuids = []
+        os.chdir(self.ServerRunner.server_dir)
+        try:
+            with open(WhitelistHandler.whitelist_json, "r") as json_file:
+                whitelist = json.load(json_file)
+                for player_uuid_json in whitelist:
+                    name = player_uuid_json["name"]
+                    uuid = player_uuid_json["uuid"]
+                    player_uuid = {
+                        "uuid": uuid,
+                        "name": name
+                    }
+                    player_uuids.append(player_uuid)
+        except json.decoder.JSONDecodeError:
+            print("Couldn't decode JSON")
+        os.chdir(self.ServerRunner.main_dir)
+        return player_uuids
 
     def remove_player(self, player_name):
-        # TODO: Remove player from whitelist
-        ""
+        """
+        Removes player from the whitelist.
+        """
+        os.chdir(self.ServerRunner.server_dir)
+        # Remove from local object
+        with open(WhitelistHandler.whitelist_json, "r") as json_file:
+            whitelist = json.load(json_file)
+            for i in range(len(whitelist)):
+                if whitelist[i]["name"] == player_name:
+                    whitelist.pop(i)
+                    break
+        # Save changes to whitelist file
+        open(WhitelistHandler.whitelist_json, "w").write(
+            json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
+        )
+        os.chdir(self.ServerRunner.main_dir)
 
     def add_player(self, player_name):
-        # TODO: Remove player from whitelist
-        ""
+        """
+        Adds a player to the whitelist.
+        """
+        os.chdir(self.ServerRunner.server_dir)
+        # Remove from local object
+        try:
+            with open(WhitelistHandler.whitelist_json, "r") as json_file:
+                whitelist = json.load(json_file)
+                player_name = player_to_uuid(player_name)
+                whitelist.append(player_name)
+        except json.decoder.JSONDecodeError:
+            print("Couldn't decode JSON, possibly empty?")
+            player_name = player_to_uuid(player_name)
+            whitelist = []
+            whitelist.append(player_name)
+
+        # Save changes to whitelist file
+        open(WhitelistHandler.whitelist_json, "w").write(
+            json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
+        )
+        os.chdir(self.ServerRunner.main_dir)
