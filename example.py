@@ -1,4 +1,7 @@
-from ServerManager import VanillaServerRunner, ServerPropertiesHandler, WhitelistHandler, player_to_uuid
+from ServerRunner.VanillaServerRunner import VanillaServerRunner
+from WhitelistHandler.WhitelistHandler import WhitelistHandler
+from ServerPropertiesHandler.ServerPropertiesHandler import ServerPropertiesHandler
+from MiscFunctions.MojangAPI import player_to_uuid
 
 player_to_uuid("Tony_De_Tiger")
 

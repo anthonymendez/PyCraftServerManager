@@ -1,4 +1,7 @@
-from ServerManager import VanillaServerRunner, ServerPropertiesHandler, WhitelistHandler, player_to_uuid
+from ServerRunner.VanillaServerRunner import VanillaServerRunner
+from WhitelistHandler.WhitelistHandler import WhitelistHandler
+from ServerPropertiesHandler.ServerPropertiesHandler import ServerPropertiesHandler
+
 
 # Server Runner
 ServerRunner = VanillaServerRunner("../Vanilla_Server_Basic/")
