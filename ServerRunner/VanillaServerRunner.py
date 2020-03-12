@@ -1,10 +1,17 @@
 import os
+import pexpect
+from threading import Thread
+from time import sleep
+
 
 class VanillaServerRunner:
     """
     Vanilla Server Runner handles launching of the Minecraft 
     Server jar, and configuring the launch parameters.
     """
+
+    commands = ["restart", "backup"]
+
     def __init__(self, server_folder, *args, **kwargs):
         """
         Sets server folder location relative to python project.\n
@@ -37,16 +44,73 @@ class VanillaServerRunner:
         # Change directory to server location
         os.chdir(self.server_dir)
         # Prepare launch String
-        launch_str = ("""java -jar -Xms%s -Xmx%s %s %s""" % (
+        self.launch_str = ("""java -jar -Xms%s -Xmx%s %s %s""" % (
             self.get_ram_xms(),
             self.get_ram_xmx(),
             self.get_server_jar_filename(),
             "nogui" if self.get_nogui() else ""
         )).strip()
         # Run server with arguments
-        os.system(launch_str)
+        # os.system(launch_str)
+        # self.server_process = subprocess.Popen(
+        #     self.launch_str.split(" "),
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE,
+        #     stdin=subprocess.PIPE,
+        #     universal_newlines=True
+        # )
+        self.server_process = pexpect.spawn(self.launch_str)
+        sleep(0.1)
+        self.output_thread = Thread(target=self.output_loop)
+        self.input_thread = Thread(target=self.input_loop)
+        self.input_thread.start()
+        sleep(0.1)
+        self.output_thread.start()
         # Change directory to python project
         os.chdir(self.main_dir)
+
+    def input_loop(self):
+        while self.server_process is not None:
+            cmd_input = input(">")
+
+            if isinstance(cmd_input, str):
+                cmd_input = cmd_input.strip()
+                if len(cmd_input) == 0:
+                    continue
+                elif cmd_input[0] == '/':
+                    if cmd_input[1::] in VanillaServerRunner.commands:
+                        print("Command %s received!" % cmd_input[1::])
+                    else:
+                        print("Command not recognized")
+                elif cmd_input == "stop":
+                    self.server_process.sendline(cmd_input.encode("utf-8"))
+                    break
+                else:
+                    self.server_process.sendline(cmd_input.encode("utf-8"))
+            else:
+                self.server_process.sendline("stop".encode("utf-8"))
+                self.server_process.terminate(force=True)
+                break
+
+    def output_loop(self):
+        while self.server_process is not None:
+            try:
+                output = self.server_process.readline().decode("utf-8").strip()
+                if not len(output) == 0:
+                    print(output)
+                elif not self.input_thread.isAlive():
+                    self.server_process.sendline("stop".encode("utf-8"))
+                    self.server_process.terminate(force=True)
+                    break
+            except pexpect.exceptions.TIMEOUT as e_timeout:
+                continue
+            except Exception as e:
+                print("Exception, stopping server.")
+                print(e)
+                self.server_process.sendline("stop".encode("utf-8"))
+                self.server_process.terminate(force=True)
+                break
+
 
     def set_server_folder_relative(self, server_folder):
         """

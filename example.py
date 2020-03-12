@@ -3,6 +3,8 @@ from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from MiscFunctions.MojangAPI import player_to_uuid
 
+from threading import Thread
+
 player_to_uuid("Tony_De_Tiger")
 
 # Server Runner
@@ -18,9 +20,8 @@ print(player_to_uuid("Tony_De_Tiger"))
 
 # Whitelist Handler
 WhitelistHandlerTest = WhitelistHandler(VanillaServerRunnerTest)
-WhitelistHandlerTest.add_player("Base")
-print(WhitelistHandlerTest.get_players())
-WhitelistHandlerTest.remove_player("Base")
-print(WhitelistHandlerTest.get_players())
+
+ServerRunnerThread = Thread(target=VanillaServerRunnerTest.run())
 
 # VanillaServerRunnerTest.run()
+server_process = VanillaServerRunnerTest.server_process
