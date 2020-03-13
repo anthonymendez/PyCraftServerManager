@@ -78,8 +78,9 @@ class VanillaServerRunner:
                 if len(cmd_input) == 0:
                     continue
                 elif cmd_input[0] == '/':
-                    if cmd_input[1::] in VanillaServerRunner.commands:
-                        print("Command %s received!" % cmd_input[1::])
+                    cmd_input_split = (cmd_input[1::]).split(" ")
+                    if cmd_input_split[0] in VanillaServerRunner.commands:
+                        print("Command %s received!" % cmd_input_split[0])
                     else:
                         print("Command not recognized")
                 elif cmd_input == "stop":
