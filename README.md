@@ -4,8 +4,8 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 # Features
 * Launch server from project
 * Ability to interact with console through Python
+* Ability to restart server
 
 # Intended Feature List
 * Configure server from Python
 * Ability to Backup Server Files
-* Ability to restart server
