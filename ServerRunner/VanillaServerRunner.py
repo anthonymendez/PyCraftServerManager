@@ -139,7 +139,7 @@ class VanillaServerRunner:
             try:
                 output = self.server_process.readline().decode("utf-8").strip()
                 if not len(output) == 0:
-                    print(output)
+                    print("\b" + output + "\n>", end = "")
                 elif not self.input_thread.isAlive():
                     self.server_process.sendline("stop".encode("utf-8"))
                     if self.server_process.isalive():
