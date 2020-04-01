@@ -2,6 +2,9 @@ import os
 import pexpect
 from threading import Thread
 from time import sleep
+from termcolor import colored
+from Configuration.WhitelistHandler import WhitelistHandler
+from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 
 
 class VanillaServerRunner:
@@ -10,7 +13,9 @@ class VanillaServerRunner:
     Server jar, and configuring the launch parameters.
     """
 
-    commands = ["restart", "backup"]
+    server_process = None
+    input_thread = None
+    output_thread = None
 
     def __init__(self, server_folder, *args, **kwargs):
         """
@@ -36,8 +41,24 @@ class VanillaServerRunner:
         self.set_ram_xmx(ram_xmx_int, ram_xmx_prefix_letter)
         # Set where Java GUI displays
         self.set_nogui(nogui_bool)
+        # Set up commands array
+        self.commands_dict = {
+            "start": self.start, 
+            "stop": self.stop, 
+            "restart": self.restart, 
+            "backup": None,
+            "exit": self.exit
+        }
+        # Server Properties Handler
+        self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
+        # Whitelist Handler
+        self.WhitelistHandler = WhitelistHandler(self.main_dir, self.server_dir)
+        # Start up input thread
+        self.stopping_all = False
+        self.input_thread = Thread(target=self.__input_loop)
+        self.input_thread.start()
 
-    def run(self):
+    def __run(self):
         """
         Start server with options set in ServerRunner.
         """
@@ -50,50 +71,70 @@ class VanillaServerRunner:
             self.get_server_jar_filename(),
             "nogui" if self.get_nogui() else ""
         )).strip()
-        # Run server with arguments
-        # os.system(launch_str)
-        # self.server_process = subprocess.Popen(
-        #     self.launch_str.split(" "),
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.PIPE,
-        #     stdin=subprocess.PIPE,
-        #     universal_newlines=True
-        # )
+        # Spawn & Launch Server Terminal
         self.server_process = pexpect.spawn(self.launch_str)
-        sleep(0.1)
-        self.output_thread = Thread(target=self.output_loop)
-        self.input_thread = Thread(target=self.input_loop)
-        self.input_thread.start()
+        self.output_thread = Thread(target=self.__output_loop)
         sleep(0.1)
         self.output_thread.start()
         # Change directory to python project
         os.chdir(self.main_dir)
 
-    def input_loop(self):
-        while self.server_process is not None:
+    def __stop(self):
+        """
+        Stop server along with output thread.
+        """
+        self.server_process.sendline("stop".encode("utf-8"))
+        print(colored("Waiting for server process to die.", "green"))
+        while True:
+            if self.server_process is None or not self.server_process.isalive():
+                break
+        self.server_process = None
+        while True:
+            if self.output_thread is None or not self.output_thread.isAlive():
+                break
+        self.output_thread = None
+
+    def __input_loop(self):
+        """
+        Handles incoming commands from the user.\n
+        All commands prepended with "/" will be sent directly to the server.jar\n
+        All other commands will be checked to see if they're supported by the program.
+        """
+        while not self.stopping_all:
             cmd_input = input(">")
 
             if isinstance(cmd_input, str):
                 cmd_input = cmd_input.strip()
+
+                # Empty Input
                 if len(cmd_input) == 0:
                     continue
+                # Command to be sent to the server.jar
                 elif cmd_input[0] == '/':
-                    cmd_input_split = (cmd_input[1::]).split(" ")
-                    if cmd_input_split[0] in VanillaServerRunner.commands:
-                        print("Command %s received!" % cmd_input_split[0])
+                    if not self.server_process is None:
+                        cmd_input_after_slash = cmd_input[1::]
+                        print(cmd_input_after_slash)
+                        print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
+                        self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
                     else:
-                        print("Command not recognized")
-                elif cmd_input == "stop":
-                    self.server_process.sendline(cmd_input.encode("utf-8"))
-                    break
+                        print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
+                # Command to be handled by ServerRunner
                 else:
-                    self.server_process.sendline(cmd_input.encode("utf-8"))
+                    if cmd_input in self.commands_dict:
+                        print(colored("Command \"%s\" received!" % cmd_input, "green"))
+                        fn = self.commands_dict.get(cmd_input)
+                        if fn is None:
+                            print(colored("Command not programmed yet! Coming soon!", "yellow"))
+                        else:
+                            fn()
+                    else:
+                        print(colored("Command not recognized", "red"))
             else:
                 self.server_process.sendline("stop".encode("utf-8"))
                 self.server_process.terminate(force=True)
                 break
 
-    def output_loop(self):
+    def __output_loop(self):
         while self.server_process is not None:
             try:
                 output = self.server_process.readline().decode("utf-8").strip()
@@ -101,17 +142,53 @@ class VanillaServerRunner:
                     print(output)
                 elif not self.input_thread.isAlive():
                     self.server_process.sendline("stop".encode("utf-8"))
-                    self.server_process.terminate(force=True)
+                    if self.server_process.isalive():
+                        self.server_process.terminate(force=True)
                     break
             except pexpect.exceptions.TIMEOUT as e_timeout:
                 continue
             except Exception as e:
-                print("Exception, stopping server.")
-                print(e)
-                self.server_process.sendline("stop".encode("utf-8"))
-                self.server_process.terminate(force=True)
+                # print(colored("Exception, stopping server.", "red"))
+                # print(e)
+                # if not self.server_process is None:
+                #     self.stop()
                 break
 
+    # TODO: Start server function
+    def start(self):
+        if self.server_process is None:
+            print(colored("Starting server...", "green"))
+            self.__run()
+        else:
+            print(colored("Server already running!", "yellow"))
+
+    def stop(self):
+        if self.server_process is None:
+            print(colored("Server is not running!", "yellow"))
+        else:
+            print(colored("Stopping server...", "green"))
+            self.__stop()
+
+
+    # TODO: Restart server function
+    def restart(self):
+        if self.server_process is None:
+            print(colored("Server is not running!", "yellow"))
+        else:
+            self.stop()
+            print(colored("Waiting for server to stop...", "yellow"))
+            while(1):
+                sleep(1)
+                if (self.server_process is None):
+                    break
+            self.start()
+            print(colored("Restart process done!", "green"))
+
+    # TODO: Stop server function and input loop
+    def exit(self):
+        self.stopping_all = True
+        if not self.server_process is None:
+            self.stop()
 
     def set_server_folder_relative(self, server_folder):
         """
