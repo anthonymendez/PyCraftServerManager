@@ -9,3 +9,9 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 # Intended Feature List
 * Configure server from Python
 * Ability to Backup Server Files
+
+# Installation
+## Coming soon...
+
+# How-to-Use
+In order to use the PyCraftServerManager you can refer to [`run.py`](run.py) or [`example.py`](example.py) on how to use.
