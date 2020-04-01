@@ -5,6 +5,8 @@ from time import sleep
 from termcolor import colored
 from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
+from Configuration.GameOptionsHandler import GameOptionsHandler
+from Configuration.JavaOptionsHandler import JavaOptionsHandler
 
 
 class VanillaServerRunner:
@@ -53,6 +55,8 @@ class VanillaServerRunner:
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
         # Whitelist Handler
         self.WhitelistHandler = WhitelistHandler(self.main_dir, self.server_dir)
+        # Game Options Handler
+        self.GameOptionsHandler = GameOptionsHandler()
         # Start up input thread
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
