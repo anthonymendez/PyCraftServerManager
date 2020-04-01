@@ -44,7 +44,7 @@ class VanillaServerRunner:
         # Set where Java GUI displays
         self.set_nogui(nogui_bool)
         # Set up commands array
-        self.commands_dict = {
+        self.commands_functions_dict = {
             "start": self.start, 
             "stop": self.stop, 
             "restart": self.restart, 
@@ -126,7 +126,7 @@ class VanillaServerRunner:
                 else:
                     if cmd_input in self.commands_dict:
                         print(colored("Command \"%s\" received!" % cmd_input, "green"))
-                        fn = self.commands_dict.get(cmd_input)
+                        fn = self.commands_functions_dict.get(cmd_input)
                         if fn is None:
                             print(colored("Command not programmed yet! Coming soon!", "yellow"))
                         else:

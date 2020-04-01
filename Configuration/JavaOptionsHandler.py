@@ -14,38 +14,95 @@ class JavaOptionsHandler:
         self.config = configparser.ConfigParser()
         self.config_file = "java_options.ini"
         self.config.read(self.config_file)
-        self.category_booleans = "JAVA_BOOLEANS"
-        self.category_numeric = "JAVA_NUMERIC"
-        self.category_strings = "JAVA_STRINGS"
-        self.category_others = []
+        self.section_ram = "JAVA_RAM"
+        self.section_booleans = "JAVA_BOOLEANS"
+        self.section_numeric = "JAVA_NUMERIC"
+        self.section_strings = "JAVA_STRINGS"
+        if self.config.has_section(self.section_ram):
+            self.__set_section_option(self.section_ram, "Xms", "Xms2G")
+            self.__set_section_option(self.section_ram, "Xmx", "Xmx2G")
 
-    def __read_category(self, category):
+    def __write(self):
         """
-        Internal Function to return array of all values in a category.
+        Saves changes into config_file.
         """
-        return config[category]
+        with open(self.config_file, 'w') as configfile:
+            self.config.write(configfile)
 
-    def read_boolean_options(self):
+    def __set_section_option(self, section, option, value):
         """
-        Returns array of all java boolean options in config file.
+        Sets option with given value.
         """
-        return self.__read_category(self.category_booleans)
+        self.config[section][option] = value
+        self.__write()
 
-    def read_numeric_options(self):
+    def get_boolean_option_value(self, option):
         """
-        Returns array of all java numeric options in config file.
+        Gets boolean option value.
         """
-        return self.__read_category(self.category_numeric)
+        return self.config[self.section_booleans][option]
 
-    def read_strings_options(self):
+    def get_string_option_value(self, option):
         """
-        Returns array of all java string options in config file.
+        Gets string option value.
         """
-        return self.__read_category(self.category_strings)
+        return self.config[self.section_strings][option]
 
-    # TODO: Implement
-    def get_formatted_options(self):
+    def get_boolean_options(self):
         """
-        Returns string of formatted options for use when launching server jar.
+        Gets boolean options.
         """
-        return ""
+        return self.config.options(self.section_booleans)
+
+    def get_string_options(self):
+        """
+        Gets string options.
+        """
+        return self.config.options(self.section_strings)
+
+    def enable_boolean_option(self, option):
+        """
+        Enable boolean option.
+        """
+        self.__set_section_option(self.section_booleans, option, str(True))
+
+    def disable_boolean_option(self, option):
+        """
+        Disable boolean option.
+        """
+        self.__set_section_option(self.section_booleans, option, str(False))
+
+    def set_string_option(self, option, value):
+        """
+        Set string option.
+        """
+        self.__set_section_option(self.section_strings, option, value)
+
+    def disable_string_option(self, option):
+        """
+        Disables a string option.
+        """
+        self.__set_section_option(self.section_strings, option, "")
+
+    def get_formatted_game_options(self):
+        """
+        Returns string of formatted options for use when launching server jar.\n
+        NOTE: Goes after server.jar in launch argument.
+        """
+        # Add Boolean Options first
+        if self.config.has_section(self.section_booleans):
+            options = self.get_boolean_options()
+            formatted_options = ""
+            for option in options:
+                if not self.get_boolean_option_value(option):
+                    continue
+                formatted_options = formatted_options + ("--%s " % option)
+        # Add String Options next
+        if self.config.has_section(self.section_strings):
+            options = self.get_string_options()
+            for option in options:
+                if self.get_string_option_value(option) == "":
+                    continue
+                formatted_options = formatted_options + ("--%s %s " % option, self.get_string_option_value(option))
+        # Return formatted string
+        return formatted_options.strip()
