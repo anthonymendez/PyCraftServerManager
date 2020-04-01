@@ -1,4 +1,3 @@
-from ServerRunner.VanillaServerRunner import VanillaServerRunner
 import os
 
 class ServerPropertiesHandler:
@@ -6,23 +5,22 @@ class ServerPropertiesHandler:
     Server Properties Handler handles launching of the setting
     and retrieval of server.properties file.
     """
+
+    server_properties = "server.properties"
+
     # TODO: Store default values of server.properties in file
-    def __init__(self, ServerRunner):
+    def __init__(self, main_directory, server_director):
         """
-        Initializes Server Properties Handler by tying it to a ServerRunner.
+        Initializes Server Properties Handler by tying it to a Server Directory.
         """
-        # Check to make sure ServerRunner is valid object
-        if not isinstance(ServerRunner, VanillaServerRunner):
-            return "Error, not valid ServerRunner!\n%s" % (str(ServerRunner))
-        # Store all current server properties
-        self.ServerRunner = ServerRunner
+        self.main_directory = main_directory
+        self.server_directory = server_director
 
     def __read_server_properties_lines(self):
         """
         Reads all the lines from the server.properties file.
         """
-        server_directory = self.ServerRunner.get_server_directory()
-        server_properties_path = os.path.join(server_directory, "server.properties")
+        server_properties_path = os.path.join(self.server_directory, ServerPropertiesHandler.server_properties)
         server_properties_file = open(server_properties_path, "r")
         server_properties_lines = server_properties_file.readlines()
         server_properties_file.close()
@@ -32,8 +30,7 @@ class ServerPropertiesHandler:
         """
         Rewrites to all the lines of the server.properties file.
         """
-        server_directory = self.ServerRunner.get_server_directory()
-        server_properties_path = os.path.join(server_directory, "server.properties")
+        server_properties_path = os.path.join(self.server_directory, ServerPropertiesHandler.server_properties)
         server_properties_file = open(server_properties_path, "w")
         server_properties_file.writelines(server_properties_lines)
         server_properties_file.close()
