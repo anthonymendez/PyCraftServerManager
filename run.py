@@ -9,6 +9,8 @@ ServerPropertiesHandler = ServerRunner.ServerPropertiesHandler
 WhitelistHandler = ServerRunner.WhitelistHandler
 # Game Options Handler
 LaunchOptionsHandler = ServerRunner.LaunchOptionsHandler
+# Should return true
+print(LaunchOptionsHandler.add_option("nogui", False))
 
 # Set IP and Server Port
 ServerPropertiesHandler.set_property("server-ip", "0.0.0.0")

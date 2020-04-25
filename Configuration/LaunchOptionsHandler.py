@@ -90,6 +90,10 @@ class LaunchOptionsHandler:
         # Append new line
         option = option + "\n"
 
+        # Check if the option is in any of lines, if so, we just return true
+        if option in launch_properties_lines:
+            return True
+
         # If not a Java option, we can just add it to the end of the lines
         # Otherwise, we have to find the index of [GAME] and insert it there
         inserted = False
