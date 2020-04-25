@@ -6,7 +6,7 @@ from termcolor import colored
 from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
-
+from pexpect import popen_spawn
 
 class VanillaServerRunner:
     """
@@ -75,7 +75,12 @@ class VanillaServerRunner:
             "nogui" if self.get_nogui() else ""
         )).strip()
         # Spawn & Launch Server Terminal
-        self.server_process = pexpect.spawn(self.launch_str)
+        # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
+        if os.name == "nt":
+            self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
+        # If OS is not windows, use pexpect.spawn as normal
+        else:
+            self.server_process = pexpect.spawn(self.launch_str)
         self.output_thread = Thread(target=self.__output_loop)
         sleep(0.1)
         self.output_thread.start()
