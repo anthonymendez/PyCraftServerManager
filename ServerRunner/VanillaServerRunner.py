@@ -30,22 +30,12 @@ class VanillaServerRunner:
         """
         # Handle optional arguments
         server_jar_filename = kwargs.get('server_jar_filename', "server.jar")
-        ram_xms_int = kwargs.get('ram_xms_int', "1")
-        ram_xms_prefix_letter = kwargs.get('ram_xms_prefix_letter', "G")
-        ram_xmx_int = kwargs.get('ram_xmx_int', "1")
-        ram_xmx_prefix_letter = kwargs.get('ram_xmx_prefix_letter', "G")
-        nogui_bool = kwargs.get('nogui_bool', True)
         # Set main directory of python project
         self.main_dir = os.getcwd()
         # Set server folder and server directory
         self.set_server_folder_relative(server_folder)
         # Set server jar filename
         self.set_server_jar_filename(server_jar_filename)
-        # Set RAM amount
-        self.set_ram_xms(ram_xms_int, ram_xms_prefix_letter)
-        self.set_ram_xmx(ram_xmx_int, ram_xmx_prefix_letter)
-        # Set where Java GUI displays
-        self.set_nogui(nogui_bool)
         # Set up commands array
         self.commands_functions_dict = {
             "start": self.start, 
@@ -72,12 +62,12 @@ class VanillaServerRunner:
         # Change directory to server location
         os.chdir(self.server_dir)
         # Prepare launch String
-        self.launch_str = ("""java -jar -Xms%s -Xmx%s %s %s""" % (
-            self.get_ram_xms(),
-            self.get_ram_xmx(),
-            self.get_server_jar_filename(),
-            "nogui" if self.get_nogui() else ""
-        )).strip()
+        self.launch_str = """java %s -jar %s %s""" % (
+            " ".join(self.LaunchOptionsHandler.java_options),
+            self.server_jar_filename,
+            " ".join(self.LaunchOptionsHandler.game_options)
+        )
+        print(self.launch_str)
         # Spawn & Launch Server Terminal
         # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
         if is_windows():
@@ -234,51 +224,3 @@ class VanillaServerRunner:
         Get name of the server jar.
         """
         return self.server_jar_filename
-
-    def set_ram_xms(self, ram_xms_int, ram_xms_prefix_letter):
-        """
-        Set amount of XMS RAM to use.\n
-        Example inputs:\n 
-        \t1024,\"M\" - 1024 Megabytes/1 Gigabyte\n
-        \t2,\"G\" - 2 Gigabytes
-        """
-        self.ram_xms = str(int(ram_xms_int)) + ram_xms_prefix_letter
-
-    def set_ram_xmx(self, ram_xmx_int, ram_xmx_prefix_letter):
-        """
-        Set amount of XMX RAM to use.\n
-        Example inputs:\n 
-        \t1024,\"M\" - 1024 Megabytes/1 Gigabyte\n
-        \t2,\"G\" - 2 Gigabytes
-        """
-        self.ram_xmx = str(int(ram_xmx_int)) + ram_xmx_prefix_letter
-
-    def get_ram_xms(self):
-        """
-        Get amount of XMS RAM server will use/is using.\n
-        Example output:\n 
-        \t\"1024M\" - 1024 Megabytes/1 Gigabyte\n
-        \t\"2G\" - 2 Gigabytes
-        """
-        return self.ram_xms
-
-    def get_ram_xmx(self):
-        """
-        Get amount of XMX RAM server will use/is using.\n
-        Example output:\n 
-        \t\"1024M\" - 1024 Megabytes/1 Gigabyte\n
-        \t\"2G\" - 2 Gigabytes
-        """
-        return self.ram_xmx
-
-    def set_nogui(self, nogui_bool):
-        """
-        Set whether server will launch with Java GUI.
-        """
-        self.nogui = nogui_bool
-
-    def get_nogui(self):
-        """
-        Returns bool whether server will launch with Java GUI.
-        """
-        return self.nogui
