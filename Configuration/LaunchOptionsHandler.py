@@ -71,6 +71,7 @@ class LaunchOptionsHandler:
         NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.
         Returns a boolean saying whether or not it was successfully inserted.
         """
+        # TODO: Add check to see if option was already added
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
         launch_properties_file = open(launch_properties_path, "r")        
