@@ -12,6 +12,8 @@ from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from pexpect import popen_spawn
+from zipfile import ZipFile
+from datetime import datetime
 
 if is_windows():
     import colorama
@@ -46,7 +48,7 @@ class VanillaServerRunner:
             "start": self.start, 
             "stop": self.stop, 
             "restart": self.restart, 
-            "backup": None,
+            "backup": self.backup,
             "exit": self.exit
         }
         # Server Properties Handler
@@ -202,6 +204,26 @@ class VanillaServerRunner:
         self.stopping_all = True
         if not self.server_process is None:
             self.stop()
+
+    def backup(self):
+        time_now = str(datetime.now()).replace(" ", ".")
+        time_now = time_now.replace("-", ".")
+        time_now = time_now.replace(":", ".")
+        print(colored("Creating zip file: %s" % time_now, "green"))
+        # TODO: Add ability to use 7zip, or make compressed tarballs
+        backup_path = "backups"
+        os.mkdir(backup_path)
+        server_zip = ZipFile(os.path.join(backup_path, time_now + ".zip"), "w")
+        print(colored("Zip file created. Backing up server files.", "green"))
+        os.chdir(self.server_dir)
+        for folder_name, subfolders, file_names in os.walk("."):
+            for file_name in file_names:
+                # Create complete filepath of file in directory
+                file_path = os.path.join(folder_name, file_name)
+                # Add file to zip
+                server_zip.write(file_path)
+        os.chdir(self.main_dir)
+
 
     def set_server_folder_relative(self, server_folder):
         """
