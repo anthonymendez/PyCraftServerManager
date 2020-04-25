@@ -1,5 +1,10 @@
 import os
 import pexpect
+
+# TODO Move to it's own module possibly
+def is_windows():
+    return os.name == "nt"
+
 from threading import Thread
 from time import sleep
 from termcolor import colored
@@ -8,9 +13,9 @@ from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from pexpect import popen_spawn
 
-# TODO Move to it's own module possibly
-def is_windows():
-    return os.name == "nt"
+if is_windows():
+    import colorama
+    colorama.init()
 
 class VanillaServerRunner:
     """
