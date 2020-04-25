@@ -6,9 +6,10 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 * Ability to interact with console through Python
 * Ability to restart server
 * Configure server from Python
+* Ability to Backup Server Files
 
 # Intended Feature List
-* Ability to Backup Server Files
+* Something I can't think of right now...
 
 # Installation
 ## Coming soon...
