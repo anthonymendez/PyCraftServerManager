@@ -16,7 +16,7 @@ class ServerPropertiesHandler:
         self.main_directory = main_directory
         self.server_directory = server_directory
 
-    def __read_server_properties_lines(self):
+    def read_server_properties_lines(self):
         """
         Reads all the lines from the server.properties file.
         """
@@ -26,7 +26,7 @@ class ServerPropertiesHandler:
         server_properties_file.close()
         return server_properties_lines
 
-    def __write_server_properties_lines(self, server_properties_lines):
+    def write_server_properties_lines(self, server_properties_lines):
         """
         Rewrites to all the lines of the server.properties file.
         """
@@ -39,7 +39,7 @@ class ServerPropertiesHandler:
         """
         Sets a specific property value in server.properties.
         """
-        server_properties_lines = self.__read_server_properties_lines()
+        server_properties_lines = self.read_server_properties_lines()
         i = 0
         for line in server_properties_lines:
             if property_name in line:
@@ -47,13 +47,13 @@ class ServerPropertiesHandler:
             else:
                 i += 1
         server_properties_lines[i] = "%s=%s\n" % (property_name, str(value).lower())
-        self.__write_server_properties_lines(server_properties_lines)
+        self.write_server_properties_lines(server_properties_lines)
     
     def get_property(self, property_name):
         """
         Gets a specific property value in server.properties.
         """
-        server_properties_lines = self.__read_server_properties_lines()
+        server_properties_lines = self.read_server_properties_lines()
         for line in server_properties_lines:
             if property_name in line:
                 return line.split("=")[1].strip()
