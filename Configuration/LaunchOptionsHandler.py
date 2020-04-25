@@ -56,7 +56,6 @@ class LaunchOptionsHandler:
             elif i == 2:
                 while not line[0:2] == "--":
                     line = "-" + line
-            
 
             # Add to the appropriate option string
             if i == 1:
@@ -70,6 +69,7 @@ class LaunchOptionsHandler:
         If is_java_option is true, adds new option under JAVA section.\n
         Otherwise, adds new option under GAME section.\n
         NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.
+        Returns a boolean saying whether or not it was successfully inserted.
         """
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
@@ -86,14 +86,26 @@ class LaunchOptionsHandler:
             while not option[0:2] == '--':
                 option = '-' + option
 
+        # Append new line
+        option = option + "\n"
+
         # If not a Java option, we can just add it to the end of the lines
         # Otherwise, we have to find the index of [GAME] and insert it there
-        if not is_java_option:
-            for line, i in launch_properties_lines:
+        inserted = False
+        if is_java_option:
+            for i, line in enumerate(launch_properties_lines):
+                # Trim and check if it's empty
+                line = line.strip()
+                if line == "":
+                    continue
+
                 if line == LaunchOptionsHandler.game_section:
-                    launch_properties_file.insert(i, option)
+                    launch_properties_lines.insert(i, option)
+                    inserted = True
+                    break
         else:
             launch_properties_lines.append(option)
+            inserted = True
 
         # Reopen launch.properties and write the modified lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
@@ -101,11 +113,18 @@ class LaunchOptionsHandler:
         launch_properties_file.writelines(launch_properties_lines)
         launch_properties_file.close()
 
+        # Reread options
+        if inserted:
+            self.read_options()
+
+        return inserted
+
     def delete_option(self, option):
         """
         Deletes an option from launch_properties.\n
         You can specify an option with, or without dashes prepended. It will be stripped from the option for comparison either way.\n
-        NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.
+        NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.\n
+        Returns a boolean saying whether or not it was successfully deleted.
         """
         # Strip option of dashes if it has any
         while option[0] == '-':
@@ -118,8 +137,13 @@ class LaunchOptionsHandler:
         launch_properties_file.close()
 
         # Iterate through the lines until we find the option specified
-        found = False
-        for line, i in launch_properties_lines:
+        deleted = False
+        for i, line in enumerate(launch_properties_lines):
+            # Trim and check if it's empty
+            line = line.strip()
+            if line == "":
+                continue
+
             # Strip line of dashes
             while line[0] == '-':
                 line = line[1::]
@@ -128,7 +152,7 @@ class LaunchOptionsHandler:
             # If so, remove it from the lines array and set found to true
             if option == line:
                 launch_properties_lines.pop(i)
-                found = True
+                deleted = True
                 break
 
         # Reopen launch.properties and write the modified lines
@@ -137,4 +161,8 @@ class LaunchOptionsHandler:
         launch_properties_file.writelines(launch_properties_lines)
         launch_properties_file.close()
 
-        return found
+        # Reread lines
+        if deleted:
+            self.read_options()
+
+        return deleted

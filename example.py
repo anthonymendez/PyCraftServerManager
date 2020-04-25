@@ -19,5 +19,22 @@ WhitelistHandlerTest = VanillaServerRunnerTest.WhitelistHandler
 
 # Launch Options Handler
 LaunchOptionsHandler = VanillaServerRunnerTest.LaunchOptionsHandler
+print("\b\tTesting Removing and Adding Options. Should be successful")
 print("\bJava Options: " + str(LaunchOptionsHandler.java_options))
-print("\bGame Options: " + str(LaunchOptionsHandler.game_options) + ">")
+print("Game Options: " + str(LaunchOptionsHandler.game_options))
+# Remove Java Option
+print("Removed Xmx2G: " + str(LaunchOptionsHandler.delete_option("Xmx2G")))
+print("Java Options After Remove: " + str(LaunchOptionsHandler.java_options))
+# Add Java Option
+print("Added Xmx2G: " + str(LaunchOptionsHandler.add_option("Xmx2G", True)))
+print("Java Options After Adding: " + str(LaunchOptionsHandler.java_options))
+# Remove Game Option
+print("Removed nogui: " + str(LaunchOptionsHandler.delete_option("nogui")))
+print("Game Options After Remove: " + str(LaunchOptionsHandler.game_options))
+# Add Game Option
+print("Added nogui: " + str(LaunchOptionsHandler.add_option("nogui", False)))
+print("Game Options After Adding: " + str(LaunchOptionsHandler.game_options))
+print("\tTesting Removing Options. Should return false")
+# Remove Java Options
+print("Remove asdf: " + str(LaunchOptionsHandler.delete_option("asdf")))
+print(">", end="")
