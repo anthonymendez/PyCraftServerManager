@@ -9,12 +9,12 @@ class ServerPropertiesHandler:
     server_properties = "server.properties"
 
     # TODO: Store default values of server.properties in file
-    def __init__(self, main_directory, server_director):
+    def __init__(self, main_directory, server_directory):
         """
         Initializes Server Properties Handler by tying it to a Server Directory.
         """
         self.main_directory = main_directory
-        self.server_directory = server_director
+        self.server_directory = server_directory
 
     def __read_server_properties_lines(self):
         """
