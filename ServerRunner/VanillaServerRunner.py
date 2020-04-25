@@ -8,6 +8,10 @@ from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from pexpect import popen_spawn
 
+# TODO Move to it's own module possibly
+def is_windows():
+    return os.name == "nt"
+
 class VanillaServerRunner:
     """
     Vanilla Server Runner handles launching of the Minecraft 
@@ -76,7 +80,7 @@ class VanillaServerRunner:
         )).strip()
         # Spawn & Launch Server Terminal
         # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
-        if os.name == "nt":
+        if is_windows():
             self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
         # If OS is not windows, use pexpect.spawn as normal
         else:
@@ -93,14 +97,22 @@ class VanillaServerRunner:
         """
         self.server_process.sendline("stop".encode("utf-8"))
         print(colored("Waiting for server process to die.", "green"))
-        while True:
-            if self.server_process is None or not self.server_process.isalive():
-                break
+        if is_windows():
+            # Similar to below but for Windows since we don't have isalive for Popen_Spawn
+            # From pexpect docs: pexpect.EOF is raised when EOF is read from a child. This usually means the child has exited.
+            self.server_process.expect(pexpect.EOF)
+        else:
+            # Check if pexpect.spawn is still alive
+            while True:
+                if self.server_process is None and not self.server_process.isalive():
+                    break
         self.server_process = None
+        print(colored("Server process dead (hopefully). Waiting for output thread to die.", "green"))
         while True:
             if self.output_thread is None or not self.output_thread.isAlive():
                 break
         self.output_thread = None
+        print(colored("Output thread dead. Server officially stopped.", "green"))
 
     def __input_loop(self):
         """
