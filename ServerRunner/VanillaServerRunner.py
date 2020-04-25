@@ -66,13 +66,14 @@ class VanillaServerRunner:
         """
         # Change directory to server location
         os.chdir(self.server_dir)
+        # Update Launch Options Handler
+        self.LaunchOptionsHandler.read_options()
         # Prepare launch String
         self.launch_str = """java %s -jar %s %s""" % (
             " ".join(self.LaunchOptionsHandler.java_options),
             self.server_jar_filename,
             " ".join(self.LaunchOptionsHandler.game_options)
         )
-        print(self.launch_str)
         # Spawn & Launch Server Terminal
         # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
         if is_windows():
