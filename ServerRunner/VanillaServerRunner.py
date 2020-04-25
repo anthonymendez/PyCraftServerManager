@@ -7,6 +7,7 @@ from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.GameOptionsHandler import GameOptionsHandler
 from Configuration.JavaOptionsHandler import JavaOptionsHandler
+from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 
 
 class VanillaServerRunner:
