@@ -8,10 +8,7 @@ ServerPropertiesHandler = ServerRunner.ServerPropertiesHandler
 # Whitelist Handler
 WhitelistHandler = ServerRunner.WhitelistHandler
 # Game Options Handler
-GameOptionsHandler = ServerRunner.GameOptionsHandler
-
-# Enable NOGUI
-GameOptionsHandler.enable_boolean_option("nogui")
+LaunchOptionsHandler = ServerRunner.LaunchOptionsHandler
 
 # Set IP and Server Port
 ServerPropertiesHandler.set_property("server-ip", "0.0.0.0")
