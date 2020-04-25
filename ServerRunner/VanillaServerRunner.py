@@ -158,7 +158,6 @@ class VanillaServerRunner:
                 #     self.stop()
                 break
 
-    # TODO: Start server function
     def start(self):
         if self.server_process is None:
             print(colored("Starting server...", "green"))
@@ -173,8 +172,6 @@ class VanillaServerRunner:
             print(colored("Stopping server...", "green"))
             self.__stop()
 
-
-    # TODO: Restart server function
     def restart(self):
         if self.server_process is None:
             print(colored("Server is not running!", "yellow"))
@@ -188,7 +185,6 @@ class VanillaServerRunner:
             self.start()
             print(colored("Restart process done!", "green"))
 
-    # TODO: Stop server function and input loop
     def exit(self):
         self.stopping_all = True
         if not self.server_process is None:
