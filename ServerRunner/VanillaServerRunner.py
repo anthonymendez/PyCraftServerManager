@@ -161,11 +161,12 @@ class VanillaServerRunner:
                     if self.server_process.isalive():
                         self.server_process.terminate(force=True)
                     break
-            except pexpect.exceptions.TIMEOUT as e_timeout:
+            except pexpect.exceptions.TIMEOUT:
+                print(colored("Output loop Timeout exception.", "red"))
                 continue
             except Exception as e:
-                # print(colored("Exception, stopping server.", "red"))
-                # print(e)
+                print(colored("Output loop exception.", "red"))
+                print(e)
                 # if not self.server_process is None:
                 #     self.stop()
                 break
