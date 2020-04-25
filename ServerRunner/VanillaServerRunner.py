@@ -5,8 +5,6 @@ from time import sleep
 from termcolor import colored
 from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
-from Configuration.GameOptionsHandler import GameOptionsHandler
-from Configuration.JavaOptionsHandler import JavaOptionsHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 
 
@@ -56,8 +54,8 @@ class VanillaServerRunner:
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
         # Whitelist Handler
         self.WhitelistHandler = WhitelistHandler(self.main_dir, self.server_dir)
-        # Game Options Handler
-        self.GameOptionsHandler = GameOptionsHandler()
+        # Launch Options Handler
+        self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_dir, self.server_dir)
         # Start up input thread
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
@@ -125,7 +123,7 @@ class VanillaServerRunner:
                         print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
                 # Command to be handled by ServerRunner
                 else:
-                    if cmd_input in self.commands_dict:
+                    if cmd_input in self.commands_functions_dict:
                         print(colored("Command \"%s\" received!" % cmd_input, "green"))
                         fn = self.commands_functions_dict.get(cmd_input)
                         if fn is None:
