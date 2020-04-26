@@ -4,6 +4,7 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 # Features
 * Start and Stop Server
 * Interact with console through Python
+* Configure launch options, whitelist, and server properties through Python
 * Restart server
 * Configure server to launch an Java or Game option. See [`launch_example.properties`](launch_example.properties) for an example.
 * Backup Server Files as ZIP or TAR
@@ -11,6 +12,7 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 # Intended Feature List
 * Schedule commands are regular intervals
 * Delete User Cache
+* Configure launch options, whitelist, and server properties through command line
 
 # Installation
 ## Coming soon...
