@@ -18,8 +18,6 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 
 * Delete User Cache
 
-* Delete User Cache
-
 # Intended Feature List
 
 * Schedule commands are regular intervals
