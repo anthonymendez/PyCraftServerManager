@@ -1,5 +1,6 @@
 import os
 import pexpect
+import tarfile
 
 # TODO Move to it's own module possibly
 def is_windows():
@@ -45,11 +46,12 @@ class VanillaServerRunner:
         self.set_server_jar_filename(server_jar_filename)
         # Set up commands array
         self.commands_functions_dict = {
-            "start": self.start, 
-            "stop": self.stop, 
-            "restart": self.restart, 
-            "backup": self.backup,
-            "exit": self.exit
+            # Terminal Command: (fn pointer, argument count)
+            "start": (self.start, 0), 
+            "stop": (self.stop, 0), 
+            "restart": (self.restart, 0), 
+            "backup": (self.backup, 1),
+            "exit": (self.exit, 0)
         }
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
@@ -138,13 +140,21 @@ class VanillaServerRunner:
                         print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
                 # Command to be handled by ServerRunner
                 else:
-                    if cmd_input in self.commands_functions_dict:
+                    cmd_input_args = cmd_input.split(" ")
+                    command = cmd_input_args[0]
+                    if command in self.commands_functions_dict:
                         print(colored("Command \"%s\" received!" % cmd_input, "green"))
-                        fn = self.commands_functions_dict.get(cmd_input)
+                        fn = self.commands_functions_dict.get(command)[0]
                         if fn is None:
                             print(colored("Command not programmed yet! Coming soon!", "yellow"))
                         else:
-                            fn()
+                            args_required = self.commands_functions_dict.get(command)[1]
+                            if args_required == 0:
+                                fn()
+                            elif len(cmd_input_args) - 1 == args_required:
+                                fn(cmd_input_args[1::])
+                            else:
+                                print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
                     else:
                         print(colored("Command not recognized", "red"))
             else:
@@ -205,28 +215,52 @@ class VanillaServerRunner:
         if not self.server_process is None:
             self.stop()
 
-    def backup(self):
+    def backup(self, cmd_input_args):
+        # Extract type of Backup from input args and create enum
+        backup_type = cmd_input_args[0].lower()
+        
+        # Create name for archive based on time space
         time_now = str(datetime.now()).replace(" ", ".")
         time_now = time_now.replace("-", ".")
         time_now = time_now.replace(":", ".")
-        print(colored("Creating zip file: %s" % time_now, "green"))
-        # TODO: Add ability to use 7zip, or make compressed tarballs
-        backup_path = "backups"
+        print(colored("Compressed archive file name: %s" % time_now, "green"))
+
+        # Create folder to store backups
+        backup_path = os.path.abspath("backups")
         if not os.path.exists(backup_path):
             os.mkdir(backup_path)
-        zip_path = os.path.join(backup_path, time_now + ".zip")
-        server_zip = ZipFile(zip_path, "w", ZIP_LZMA)
+        # Archive Path to store compressed server folder
+        archive_path = os.path.join(backup_path, time_now)
+        if backup_type == "zip":
+            self.__backup_as_zip(archive_path + ".zip")
+        elif backup_type == "tar":
+            self.__backup_as_tar(archive_path + ".tar.gz")
+        else:
+            print(colored("Invalid Backup Type passed in. Not backing up.", "red"))
+            return
+        print(colored("Backed up server files.", "green"))
+
+    def __backup_as_zip(self, archive_path):
+        """
+        Backs up Server folder into a ZIP archive using LZMA compression.
+        """
+        server_zip = ZipFile(archive_path, "w", ZIP_LZMA)
         print(colored("Zip file created. Backing up server files.", "green"))
         os.chdir(self.server_dir)
-        for folder_name, subfolders, file_names in os.walk("."):
+        for folder_name, subfolders, file_names in os.walk(self.server_dir):
             for file_name in file_names:
                 # Create complete filepath of file in directory
                 file_path = os.path.join(folder_name, file_name)
                 # Add file to zip
                 server_zip.write(file_path)
-        print(colored("Backed up server files.", "green"))
-        os.chdir(self.main_dir)
 
+    def __backup_as_tar(self, archive_path):
+        """
+        Backs up Server folder into a compressed tar file.
+        """
+        print(colored("Creating and compressing tar file.", "green"))
+        with tarfile.open(archive_path, "w:gz") as tar:
+            tar.add(".", arcname=os.path.basename(self.server_dir))
 
     def set_server_folder_relative(self, server_folder):
         """
