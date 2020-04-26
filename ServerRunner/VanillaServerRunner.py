@@ -12,7 +12,7 @@ from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from pexpect import popen_spawn
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
 from datetime import datetime
 
 if is_windows():
@@ -212,8 +212,10 @@ class VanillaServerRunner:
         print(colored("Creating zip file: %s" % time_now, "green"))
         # TODO: Add ability to use 7zip, or make compressed tarballs
         backup_path = "backups"
-        os.mkdir(backup_path)
-        server_zip = ZipFile(os.path.join(backup_path, time_now + ".zip"), "w")
+        if not os.path.exists(backup_path):
+            os.mkdir(backup_path)
+        zip_path = os.path.join(backup_path, time_now + ".zip")
+        server_zip = ZipFile(zip_path, "w", ZIP_LZMA)
         print(colored("Zip file created. Backing up server files.", "green"))
         os.chdir(self.server_dir)
         for folder_name, subfolders, file_names in os.walk("."):
@@ -222,6 +224,7 @@ class VanillaServerRunner:
                 file_path = os.path.join(folder_name, file_name)
                 # Add file to zip
                 server_zip.write(file_path)
+        print(colored("Backed up server files.", "green"))
         os.chdir(self.main_dir)
 
 
