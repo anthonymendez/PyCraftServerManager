@@ -8,10 +8,10 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 * Restart server
 * Configure server to launch an Java or Game option. See [`launch_example.properties`](launch_example.properties) for an example.
 * Backup Server Files as ZIP or TAR
+* Delete User Cache
 
 # Intended Feature List
 * Schedule commands are regular intervals
-* Delete User Cache
 * Configure launch options, whitelist, and server properties through command line
 
 # Installation
