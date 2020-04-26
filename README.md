@@ -2,14 +2,15 @@
 A Python wrapper for Minecraft Servers. Control your Minecraft Server through this Python Package with the normal features + more
 
 # Features
-* Launch server from project
-* Ability to interact with console through Python
-* Ability to restart server
-* Configure server from Python
-* Ability to Backup Server Files
+* Start and Stop Server
+* Interact with console through Python
+* Restart server
+* Configure server to launch an Java or Game option. See [`launch_example.properties`](launch_example.properties) for an example.
+* Backup Server Files as ZIP or TAR
 
 # Intended Feature List
-* Something I can't think of right now...
+* Schedule commands are regular intervals
+* Delete User Cache
 
 # Installation
 ## Coming soon...
