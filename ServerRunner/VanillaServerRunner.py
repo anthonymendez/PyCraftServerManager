@@ -51,7 +51,8 @@ class VanillaServerRunner:
             "stop": (self.stop, 0), 
             "restart": (self.restart, 0), 
             "backup": (self.backup, 1),
-            "exit": (self.exit, 0)
+            "exit": (self.exit, 0),
+            "delete_user_cache": (self.delete_user_cache, 0)
         }
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
@@ -239,6 +240,14 @@ class VanillaServerRunner:
             print(colored("Invalid Backup Type passed in. Not backing up.", "red"))
             return
         print(colored("Backed up server files.", "green"))
+
+    def delete_user_cache(self):
+        if self.server_process is None:
+            print(colored("Deleting user cache.", "green"))
+            usercache_file = os.path.join(self.server_dir, "usercache.json")
+            os.remove(usercache_file)
+        else:
+            print(colored("Server is running. Cannot delete user cache." % time_now, "red"))
 
     def set_server_folder_relative(self, server_folder):
         """
