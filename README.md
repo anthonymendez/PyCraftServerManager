@@ -26,7 +26,7 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 
 # Required
 
-* Python 3.8 with Pip
+* Python 3 (recommended 3.8) with Pip
 
 * Installation of a Minecraft Server
 
