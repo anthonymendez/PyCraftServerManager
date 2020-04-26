@@ -4,19 +4,19 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 
 # Features
 
-* Start and Stop Server
+Note: When I say `terminal` or `command line`, I mean feature is accessible through the terminal/command line. When I say `Python`, you can launch the feature in a Python script.
 
-* Interact with console through Python
+* Start, Stop, Restart Server
+
+* Launch Minecraft and PyCraft commands in the same terminal
 
 * Configure launch options, whitelist, and server properties through Python
 
-* Restart server
+* Configure server launch Java or Game options. See [`launch_example.properties`](launch_example.properties).
 
-* Configure server to launch an Java or Game option. See [`launch_example.properties`](launch_example.properties) for an example.
+* Backup Server Files as ZIP or TAR through Python and terminal
 
-* Backup Server Files as ZIP or TAR
-
-* Delete User Cache
+* Delete User Cache through Python and terminal
 
 # Intended Feature List
 
