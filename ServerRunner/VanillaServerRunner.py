@@ -240,6 +240,23 @@ class VanillaServerRunner:
             return
         print(colored("Backed up server files.", "green"))
 
+    def set_server_folder_relative(self, server_folder):
+        """
+        Set server folder and directory relative to main directory.\n
+        Example inputs:\n
+        \t\"../server/\" - Back one directory, then into server folder
+        """
+        self.server_folder = server_folder
+        self.server_dir = os.path.join(self.main_dir, server_folder)
+
+    def set_server_jar_filename(self, server_jar_filename):
+        """
+        Set name of the server jar.\n
+        Example inputs:\n
+        \t\"server.jar\"
+        """
+        self.server_jar_filename = server_jar_filename
+
     def __backup_as_zip(self, archive_path):
         """
         Backs up Server folder into a ZIP archive using LZMA compression.
@@ -261,32 +278,3 @@ class VanillaServerRunner:
         print(colored("Creating and compressing tar file.", "green"))
         with tarfile.open(archive_path, "w:gz") as tar:
             tar.add(".", arcname=os.path.basename(self.server_dir))
-
-    def set_server_folder_relative(self, server_folder):
-        """
-        Set server folder and directory relative to main directory.\n
-        Example inputs:\n
-        \t\"../server/\" - Back one directory, then into server folder
-        """
-        self.server_folder = server_folder
-        self.server_dir = os.path.join(self.main_dir, server_folder)
-
-    def get_server_directory(self):
-        """
-        Get server folder directory.
-        """
-        return self.server_dir
-
-    def set_server_jar_filename(self, server_jar_filename):
-        """
-        Set name of the server jar.\n
-        Example inputs:\n
-        \t\"server.jar\"
-        """
-        self.server_jar_filename = server_jar_filename
-
-    def get_server_jar_filename(self):
-        """
-        Get name of the server jar.
-        """
-        return self.server_jar_filename
