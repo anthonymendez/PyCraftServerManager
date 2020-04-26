@@ -20,7 +20,7 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 
 # Intended Feature List
 
-* Schedule commands are regular intervals
+* Schedule commands at regular intervals
 
 * Configure launch options, whitelist, and server properties through command line
 
