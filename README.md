@@ -44,6 +44,17 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 
 1. Run `start` and your server should start up.
 
+# Commands
+
+|    Command Name   |                                                                                                                 Description                                                                                                                | Arguments (blank if none) |
+|:-----------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------:|
+|  start            |  Starts the Minecraft Server.                                                                                                                                                                                                              |                           |
+| stop              |  Stop the Minecraft Server.                                                                                                                                                                                                                |                           |
+| restart           | Stops then starts the Minecraft server. If Minecraft server isn't running it will not attempt to start it.                                                                                                                                 |                           |
+| backup            | Backs up Minecraft server folder to the folder backups in Project directory. Pass in argument "zip" for server folder to be stored in compressed ZIP folder. Pass in argument "tar" for server folder to be stored in compressed TAR file. | ["tar", "zip"]            |
+| exit              |  Quits the Python program. Stops Minecraft server if it is still running.                                                                                                                                                                  |                           |
+| delete_user_cache | Deletes `usercache.json` in Minecraft server folder.                                                                                                                                                                                       |                           |
+
 # How-to-Use
 
 In order to use the PyCraftServerManager you can refer to [`run.py`](run.py) or [`example.py`](example.py) on how to use.
