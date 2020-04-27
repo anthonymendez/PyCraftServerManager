@@ -1,5 +1,5 @@
 from ServerRunner.VanillaServerRunner import VanillaServerRunner
-from MiscFunctions.MojangAPI import player_to_uuid
+from Utilities.MojangAPI import player_to_uuid
 
 from threading import Thread
 
