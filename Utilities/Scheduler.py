@@ -27,6 +27,7 @@ class Scheduler():
         self.input_handler = input_handler
         self.list_file_path = os.path.join(self.server_directory, self.list_file_name)
         self.sched = BackgroundScheduler()
+        self.sched.start()
         # Create scheduler.list file if it doesn't exist and create headers for it
         if not os.path.exists(self.list_file_path):
             list_file = open(self.list_file_path, 'w')
@@ -36,27 +37,41 @@ class Scheduler():
     def create_scheduled_command(self, command, cron_string):
         """
         Creates scheduled command using the given scheduler command string.\n
+        Schedules using cron-like syntax.\n
+        https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
         """
         # Check for empty strings
         if command == None or len(command) == 0 or cron_string == None or len(cron_string) == 0:
             return False
 
         # Check if it fits the amount arguments needed for cron
-        cron_list = cron_string.splits(" ")
-        if (len(cron_list) < 11 or len(cron_list > 12)):
+        cron_list = cron_string.split(" ")
+        if (len(cron_list) < 11 or len(cron_list) > 12):
             return False
 
-        year = cron_list[0]
-        month = cron_list[1]
-        day = cron_list[2]
-        week = cron_list[3]
-        day_of_week = cron_list[4]
-        hour = cron_list[5]
-        minute = cron_list[6]
-        second = cron_list[7]
-        start_date = cron_list[8]
-        end_date = cron_list[9]
-        timezone = cron_list[10]
+        year = None if cron_list[0] == "*" else cron_list[0]
+        month = None if cron_list[1] == "*" else cron_list[1]
+        day = None if cron_list[2] == "*" else cron_list[2]
+        week = None if cron_list[3] == "*" else cron_list[3]
+        day_of_week = None if cron_list[4] == "*" else cron_list[4]
+        hour = None if cron_list[5] == "*" else cron_list[5]
+        minute = None if cron_list[6] == "*" else cron_list[6]
+        second = None if cron_list[7] == "*" else cron_list[7]
+        start_date = None if cron_list[8] == "*" else cron_list[8]
+        end_date = None if cron_list[9] == "*" else cron_list[9]
+        timezone = None if cron_list[10] == "*" else cron_list[10]
+
+        print("year " + str(year))
+        print("month " + str(month))
+        print("day " + str(day))
+        print("week " + str(week))
+        print("day_of_week " + str(day_of_week))
+        print("hour " + str(hour))
+        print("minute " + str(minute))
+        print("second " + str(second))
+        print("start_date " + str(start_date))
+        print("end_date " + str(end_date))
+        print("timezone " + str(timezone))
 
         # Check if jitter is exists
         jitter = None
@@ -65,12 +80,12 @@ class Scheduler():
 
         # Try to schedule command like a cron task
         try:
-            self.sched.add_job(self.input_handler, "cron", args=[command], 
+            self.sched.add_job(self.input_handler, trigger="cron", args=[command], 
                             year=year, month=month, day=day, week=week, 
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
             return True
         except Exception as e:
-            print(e)
+            print(str(e))
             return False

@@ -1,6 +1,7 @@
 import os
 import pexpect
 import tarfile
+import re
 
 # TODO Move to it's own module possibly
 def is_windows():
@@ -54,7 +55,7 @@ class VanillaServerRunner:
             "backup": (self.backup, 1),
             "exit": (self.exit, 0),
             "delete_user_cache": (self.delete_user_cache, 0),
-            "schedule": (None, 0)
+            "schedule": (self.schedule, -1)
         }
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
@@ -63,7 +64,7 @@ class VanillaServerRunner:
         # Launch Options Handler
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_dir, self.server_dir)
         # Scheduler Class
-        self.scheduler = Scheduler(self.main_dir, self.server_dir, self.__input_handler)
+        self.Scheduler = Scheduler(self.main_dir, self.server_dir, self.__input_handler)
         # Start up input thread
         self.input_handler_lock = Lock()
         self.stopping_all = False
@@ -152,7 +153,9 @@ class VanillaServerRunner:
                         print(colored("Command not programmed yet! Coming soon!", "yellow"))
                     else:
                         args_required = self.commands_functions_dict.get(command)[1]
-                        if args_required == 0:
+                        if args_required == -1:
+                            fn(cmd_input)
+                        elif args_required == 0:
                             fn()
                         elif len(cmd_input_args) - 1 == args_required:
                             fn(cmd_input_args[1::])
@@ -263,6 +266,20 @@ class VanillaServerRunner:
             os.remove(usercache_file)
         else:
             print(colored("Server is running. Cannot delete user cache." % time_now, "red"))
+
+    def schedule(self, cmd_input_args):
+        # Extract command and cron string
+        # https://stackoverflow.com/a/2076356/12464369
+        cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
+        command = cmd_inputs_args_quoted[0]
+        cron = cmd_inputs_args_quoted[1]
+        print(cmd_inputs_args_quoted)
+        # Create scheduled command
+        is_successful = self.Scheduler.create_scheduled_command(command, cron)
+        if is_successful:
+            print(colored("Command successfully scheduled!", "green"))
+        else:
+            print(colored("Command not scheduled!", "red"))
 
     def set_server_folder_relative(self, server_folder):
         """
