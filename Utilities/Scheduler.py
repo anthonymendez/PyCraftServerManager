@@ -7,24 +7,6 @@ from apscheduler.triggers import cron
 from apscheduler.schedulers.background import BackgroundScheduler
 from threading import Thread
 
-# TODO Move to it's own module
-def is_valid_date(date_str):
-    try:
-        datetime.datetime.strptime(date_str, "%Y-%m-%d")
-        return True
-    except ValueError:
-        return False
-
-# TODO: Move to it's own module
-def is_int(s):
-    """
-    Checks if a given string is an integer.\n
-    https://stackoverflow.com/a/1265696
-    """
-    if s[0] in ('-', '+'):
-        return s[1:].isdigit()
-    return s.isdigit()
-
 class Scheduler():
     """
     Scheduler class handles running commands at regular intervals.
