@@ -27,9 +27,16 @@ class LaunchOptionsHandler:
         """
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
-        launch_properties_file = open(launch_properties_path, "r")
-        launch_properties_lines = launch_properties_file.readlines()
-        launch_properties_file.close()
+        # If file does not exist, create it.
+        if not os.path.exists(launch_properties_path):
+            launch_properties_file = open(launch_properties_path, "w")
+            lines = [self.java_section + "\n", self.game_section + "\n"]
+            launch_properties_file.writelines(lines)
+            launch_properties_file.close()
+        else:
+            launch_properties_file = open(launch_properties_path, "r")
+            launch_properties_lines = launch_properties_file.readlines()
+            launch_properties_file.close()
         # Clear out java and game options array
         self.java_options.clear()
         self.game_options.clear()
