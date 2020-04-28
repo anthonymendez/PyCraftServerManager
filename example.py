@@ -60,3 +60,12 @@ print("#########################################")
 # Remove Java Options
 print("Remove asdf: " + str(LaunchOptionsHandlerTest.delete_option("asdf")))
 print(">", end="")
+
+# Scheduler
+Scheduler = VanillaServerRunnerTest.Scheduler
+print("#########################################")
+print("\tTesting Scheduler.")
+print("#########################################")
+Scheduler.add_scheduled_function(VanillaServerRunnerTest.backup, "zip", "* * * * * * */1 * * * *")
+Scheduler.add_scheduled_command("/say Test say!", "* * * * * * */1 * * * *")
+Scheduler.list_scheduled_commands()

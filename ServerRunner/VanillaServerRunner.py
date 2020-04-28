@@ -235,6 +235,9 @@ class VanillaServerRunner:
             self.stop()
 
     def backup(self, cmd_input_args):
+        # Check if it's just a string. Hacky bug fix for Scheduler calling.
+        if isinstance(cmd_input_args, str):
+            cmd_input_args = [cmd_input_args]
         # Extract type of Backup from input args and create enum
         backup_type = cmd_input_args[0].lower()
         
@@ -255,7 +258,7 @@ class VanillaServerRunner:
         elif backup_type == "tar":
             self.__backup_as_tar(archive_path + ".tar.gz")
         else:
-            print(colored("Invalid Backup Type passed in. Not backing up.", "red"))
+            print(colored("Invalid Backup Type of \"%s\" passed in. Not backing up." % backup_type, "red"))
             return
         print(colored("Backed up server files.", "green"))
 
