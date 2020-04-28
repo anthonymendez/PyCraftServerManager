@@ -44,8 +44,14 @@ for i, page in enumerate(download_pages):
     print("Page %d/%d" % (i, len(download_pages)))
     dp = Thread(target=get_page_download_links, args=[page])
     dp.start()
+    thread_q.append(dp)
 
 for t in thread_q:
     t.join()
 
-print("Pages downloaded: " + str(len(download_pages)))
+print("Pages downloaded: " + str(len(download_links)))
+for link in download_links:
+    if "client" in link:
+        download_links.remove(link)
+    print(link)
+print("Pages final: " + str(len(download_links)))
