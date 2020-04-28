@@ -6,7 +6,7 @@ import tarfile
 def is_windows():
     return os.name == "nt"
 
-from threading import Thread
+from threading import Thread, Lock
 from time import sleep
 from termcolor import colored
 from pexpect import popen_spawn
@@ -65,6 +65,7 @@ class VanillaServerRunner:
         # Scheduler Class
         self.scheduler = Scheduler(self.main_dir, self.server_dir, self.__input_handler)
         # Start up input thread
+        self.input_handler_lock = Lock()
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
         self.input_thread.start()
@@ -127,34 +128,38 @@ class VanillaServerRunner:
         # Empty Input
         if len(cmd_input) == 0:
             return
-        # Command to be sent to the server.jar
-        elif cmd_input[0] == '/':
-            if not self.server_process is None:
-                cmd_input_after_slash = cmd_input[1::]
-                print(cmd_input_after_slash)
-                print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
-                self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
-            else:
-                print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
-        # Command to be handled by ServerRunner
-        else:
-            cmd_input_args = cmd_input.split(" ")
-            command = cmd_input_args[0]
-            if command in self.commands_functions_dict:
-                print(colored("Command \"%s\" received!" % cmd_input, "green"))
-                fn = self.commands_functions_dict.get(command)[0]
-                if fn is None:
-                    print(colored("Command not programmed yet! Coming soon!", "yellow"))
+
+        # Lock function
+        # https://stackoverflow.com/a/10525433/12464369
+        with self.input_handler_lock:
+            # Command to be sent to the server.jar
+            if cmd_input[0] == '/':
+                if not self.server_process is None:
+                    cmd_input_after_slash = cmd_input[1::]
+                    print(cmd_input_after_slash)
+                    print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
+                    self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
                 else:
-                    args_required = self.commands_functions_dict.get(command)[1]
-                    if args_required == 0:
-                        fn()
-                    elif len(cmd_input_args) - 1 == args_required:
-                        fn(cmd_input_args[1::])
-                    else:
-                        print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+                    print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
+            # Command to be handled by ServerRunner
             else:
-                print(colored("Command not recognized", "red"))
+                cmd_input_args = cmd_input.split(" ")
+                command = cmd_input_args[0]
+                if command in self.commands_functions_dict:
+                    print(colored("Command \"%s\" received!" % cmd_input, "green"))
+                    fn = self.commands_functions_dict.get(command)[0]
+                    if fn is None:
+                        print(colored("Command not programmed yet! Coming soon!", "yellow"))
+                    else:
+                        args_required = self.commands_functions_dict.get(command)[1]
+                        if args_required == 0:
+                            fn()
+                        elif len(cmd_input_args) - 1 == args_required:
+                            fn(cmd_input_args[1::])
+                        else:
+                            print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+                else:
+                    print(colored("Command not recognized", "red"))
 
     def __input_loop(self):
         """
