@@ -38,7 +38,7 @@ def get_page_download_links(page):
 
     a_container = soup.find_all("a", attrs={"class": "button"})
 
-    download_links.append(a_container[0]["href"])
+    download_links.append({page[32::]: a_container[0]["href"]})
 
 for i, page in enumerate(download_pages):
     print("Page %d/%d" % (i, len(download_pages)))
