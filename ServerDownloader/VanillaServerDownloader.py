@@ -3,6 +3,7 @@ import urllib.request
 import time
 import os
 from bs4 import BeautifulSoup
+from threading import Thread
 
 site = "https://mcversions.net"
 
@@ -27,10 +28,10 @@ print("Getting download links")
 
 # Get download link from each page
 
+thread_q = []
 download_links = []
 
-for i, page in enumerate(download_pages):
-    print("Page %d/%d" % (i, len(download_pages)))
+def get_page_download_links(page):
     response = requests.get(page)
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -39,6 +40,12 @@ for i, page in enumerate(download_pages):
 
     download_links.append(a_container[0]["href"])
 
-print("Done")
+for i, page in enumerate(download_pages):
+    print("Page %d/%d" % (i, len(download_pages)))
+    dp = Thread(target=get_page_download_links, args=[page])
+    dp.start()
 
-print(download_pages)
+for t in thread_q:
+    t.join()
+
+print("Pages downloaded: " + str(len(download_pages)))
