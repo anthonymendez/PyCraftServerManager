@@ -10,7 +10,7 @@ class Scheduler():
     Scheduler class handles running commands at regular intervals.
     """
 
-    list_file_name = "scheduler.csv"
+    list_file_name = "scheduler.list"
 
     def __init__(self, main_directory, server_directory, input_handler):
         """
