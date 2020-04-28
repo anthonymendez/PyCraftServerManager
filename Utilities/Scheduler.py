@@ -1,9 +1,20 @@
 import os
 import csv
-import schedule
 import pickle
+import re
 
+from apscheduler.triggers import cron
 from threading import Thread
+
+# TODO: Move to it's own module
+def is_int(s):
+    """
+    Checks if a given string is an integer.\n
+    https://stackoverflow.com/a/1265696
+    """
+    if s[0] in ('-', '+'):
+        return s[1:].isdigit()
+    return s.isdigit()
 
 class Scheduler():
     """
@@ -29,24 +40,14 @@ class Scheduler():
             list_file = open(self.list_file_path, 'w')
             list_file.write("")
             list_file.close()
+    
+    def create_scheduled_command(self, command, scheduler_commands):
+        """
+        Creates scheduled command using the given scheduler command string.\n
+        """
+        # Check for empty strings
+        if command == None or len(command) == 0 or scheduler_commands == None or len(scheduler_commands) == 0:
+            return False
 
-    def run_threaded_input_job(self, cmd_input):
-        """
-        Runs a given function in it's own thread.
-        """
-        job_thread = Thread(target=self.input_handler, args=[cmd_input])
-        job_thread.start()
-
-    def load_scheduled_jobs(self):
-        """
-        Loads all jobs in scheduler file to scheduler.jobs.
-        """
-        list_file = open(self.list_file_path, "w")
-        pickle.dump(schedule.jobs, list_file)
-
-    def save_scheduled_jobs(self):
-        """
-        Saves all jobs in scheduler to a file with serialized data.
-        """
-        list_file = open(self.list_file_path, "r")
-        schedule.jobs = pickle.load(list_file)
+        # Check if the first argument is an integer. If so it is the interval for every command.
+        

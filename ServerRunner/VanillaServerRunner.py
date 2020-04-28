@@ -9,12 +9,13 @@ def is_windows():
 from threading import Thread
 from time import sleep
 from termcolor import colored
-from Configuration.WhitelistHandler import WhitelistHandler
-from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
-from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from pexpect import popen_spawn
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
 from datetime import datetime
+from Configuration.WhitelistHandler import WhitelistHandler
+from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
+from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
+from Utilities.Scheduler import Scheduler
 
 if is_windows():
     import colorama
@@ -61,6 +62,8 @@ class VanillaServerRunner:
         self.WhitelistHandler = WhitelistHandler(self.main_dir, self.server_dir)
         # Launch Options Handler
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_dir, self.server_dir)
+        # Scheduler Class
+        self.scheduler = Scheduler(self.main_dir, self.server_dir, self.__input_handler)
         # Start up input thread
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
