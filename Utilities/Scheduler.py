@@ -3,7 +3,7 @@ import csv
 import pickle
 import re
 
-from apscheduler.triggers import cron
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from threading import Thread
 
@@ -61,17 +61,17 @@ class Scheduler():
         end_date = None if cron_list[9] == "*" else cron_list[9]
         timezone = None if cron_list[10] == "*" else cron_list[10]
 
-        print("year " + str(year))
-        print("month " + str(month))
-        print("day " + str(day))
-        print("week " + str(week))
-        print("day_of_week " + str(day_of_week))
-        print("hour " + str(hour))
-        print("minute " + str(minute))
-        print("second " + str(second))
-        print("start_date " + str(start_date))
-        print("end_date " + str(end_date))
-        print("timezone " + str(timezone))
+        print("year \"" + str(year) + "\"")
+        print("month \"" + str(month) + "\"")
+        print("day \"" + str(day) + "\"")
+        print("week \"" + str(week) + "\"")
+        print("day_of_week \"" + str(day_of_week) + "\"")
+        print("hour \"" + str(hour) + "\"")
+        print("minute \"" + str(minute) + "\"")
+        print("second \"" + str(second) + "\"")
+        print("start_date \"" + str(start_date) + "\"")
+        print("end_date \"" + str(end_date) + "\"")
+        print("timezone \"" + str(timezone) + "\"")
 
         # Check if jitter is exists
         jitter = None
@@ -80,11 +80,11 @@ class Scheduler():
 
         # Try to schedule command like a cron task
         try:
-            self.sched.add_job(self.input_handler, trigger="cron", args=[command], 
-                            year=year, month=month, day=day, week=week, 
+            ct = CronTrigger(year=year, month=month, day=day, week=week, 
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
+            self.sched.add_job(self.input_handler, trigger=ct, args=[command])
             return True
         except Exception as e:
             print(str(e))

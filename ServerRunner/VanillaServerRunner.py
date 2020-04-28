@@ -193,7 +193,7 @@ class VanillaServerRunner:
                         self.server_process.terminate(force=True)
                     break
             except pexpect.exceptions.TIMEOUT:
-                print(colored("Output loop Timeout exception.", "red"))
+                # print(colored("Output loop Timeout exception.", "red"))
                 continue
             except Exception as e:
                 print(colored("Output loop exception.", "red"))
