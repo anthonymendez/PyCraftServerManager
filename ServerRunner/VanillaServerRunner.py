@@ -279,19 +279,19 @@ class VanillaServerRunner:
             cron = cmd_inputs_args_quoted[1]
             print(cmd_inputs_args_quoted)
             # Create scheduled command
-            is_successful = self.Scheduler.add_scheduled_command(command, cron)
-            if is_successful:
+            if (self.Scheduler.add_scheduled_command(command, cron)):
                 print(colored("Command successfully scheduled!", "green"))
             else:
                 print(colored("Command not scheduled!", "red"))
         # List all scheduled commands
         elif (schedule_command_type == "list"):
-            job_list = self.Scheduler.list_scheduled_commands()
-            # print(job_list)
+            if (not self.Scheduler.list_scheduled_commands()):
+                print(colored("Something went wrong listing scheduled jobs!", "red"))
         # Delete command
         elif (schedule_command_type == "delete"):
-            job_id = cmd_input_args.split(" ")[1]
-            self.Scheduler.delete_scheduled_command(job_id)
+            job_id = cmd_input_args.split(" ")[2]
+            if (not self.Scheduler.delete_scheduled_command(job_id)):
+                print(colored("Something went wrong deleting a scheduled job!", "red"))
         # Not a valid command
         else:
             print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))

@@ -28,6 +28,7 @@ class Scheduler():
         self.list_file_path = os.path.join(self.server_directory, self.list_file_name)
         self.sched = BackgroundScheduler()
         self.sched.start()
+        self.job_count = 0
         # Create scheduler.list file if it doesn't exist and create headers for it
         if not os.path.exists(self.list_file_path):
             list_file = open(self.list_file_path, 'w')
@@ -84,7 +85,8 @@ class Scheduler():
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
-            self.sched.add_job(self.input_handler, trigger=ct, args=[command])
+            self.sched.add_job(self.input_handler, trigger=ct, args=[command], id=str(self.job_count))
+            self.job_count += 1
             return True
         except Exception as e:
             print(str(e))
@@ -96,6 +98,7 @@ class Scheduler():
         """
         try:
             self.sched.remove_job(job_id)
+            self.job_count -= 1
             return True
         except Exception as e:
             print(e)
@@ -106,7 +109,14 @@ class Scheduler():
         Returns list of currently scheduled jobs.
         """
         try:
-            return self.sched.print_jobs()
+            job_list = self.sched.get_jobs()
+            for job in job_list:
+                job_info = "ID: %s; " % job.id
+                job_info += "Command: %s; " % str(job.args)
+                job_info += "%s; " % str(job.trigger)
+                job_info += "Next run time: %s" % str(job.next_run_time)
+                print(job_info)
+            return True
         except Exception as e:
             print(e)
-            return None
+            return False
