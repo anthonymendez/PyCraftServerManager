@@ -34,7 +34,7 @@ class Scheduler():
             list_file.write("")
             list_file.close()
     
-    def create_scheduled_command(self, command, cron_string):
+    def add_scheduled_command(self, command, cron_string):
         """
         Creates scheduled command using the given scheduler command string.\n
         Schedules using cron-like syntax.\n
@@ -89,3 +89,24 @@ class Scheduler():
         except Exception as e:
             print(str(e))
             return False
+
+    def delete_scheduled_command(self, job_id):
+        """
+        Removes scheduled command with the job's id.
+        """
+        try:
+            self.sched.remove_job(job_id)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def list_scheduled_commands(self):
+        """
+        Returns list of currently scheduled jobs.
+        """
+        try:
+            return self.sched.print_jobs()
+        except Exception as e:
+            print(e)
+            return None

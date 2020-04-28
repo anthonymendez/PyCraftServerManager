@@ -268,18 +268,33 @@ class VanillaServerRunner:
             print(colored("Server is running. Cannot delete user cache." % time_now, "red"))
 
     def schedule(self, cmd_input_args):
-        # Extract command and cron string
-        # https://stackoverflow.com/a/2076356/12464369
-        cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
-        command = cmd_inputs_args_quoted[0]
-        cron = cmd_inputs_args_quoted[1]
-        print(cmd_inputs_args_quoted)
-        # Create scheduled command
-        is_successful = self.Scheduler.create_scheduled_command(command, cron)
-        if is_successful:
-            print(colored("Command successfully scheduled!", "green"))
+        # Check what type of schedule command it is
+        schedule_command_type = cmd_input_args.split(" ")[1]
+        # Add new scheduled command
+        if (schedule_command_type == "add"):
+            # Extract command and cron string
+            # https://stackoverflow.com/a/2076356/12464369
+            cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
+            command = cmd_inputs_args_quoted[0]
+            cron = cmd_inputs_args_quoted[1]
+            print(cmd_inputs_args_quoted)
+            # Create scheduled command
+            is_successful = self.Scheduler.add_scheduled_command(command, cron)
+            if is_successful:
+                print(colored("Command successfully scheduled!", "green"))
+            else:
+                print(colored("Command not scheduled!", "red"))
+        # List all scheduled commands
+        elif (schedule_command_type == "list"):
+            job_list = self.Scheduler.list_scheduled_commands()
+            # print(job_list)
+        # Delete command
+        elif (schedule_command_type == "delete"):
+            job_id = cmd_input_args.split(" ")[1]
+            self.Scheduler.delete_scheduled_command(job_id)
+        # Not a valid command
         else:
-            print(colored("Command not scheduled!", "red"))
+            print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
 
     def set_server_folder_relative(self, server_folder):
         """
