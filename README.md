@@ -18,9 +18,9 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 
 * Delete User Cache through Python and terminal
 
-# Intended Feature List
+* Schedule commands using cron-like scheduling. See [APScheduler CronTriggers](https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html) and [How to Schedule like Cron](HOW_TO_CRON.md).
 
-* Schedule commands at regular intervals
+# Intended Feature List
 
 * Configure launch options, whitelist, and server properties through command line
 

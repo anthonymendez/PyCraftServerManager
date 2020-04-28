@@ -98,7 +98,6 @@ class Scheduler():
         """
         try:
             self.sched.remove_job(job_id)
-            self.job_count -= 1
             return True
         except Exception as e:
             print(e)
