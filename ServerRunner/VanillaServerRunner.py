@@ -52,7 +52,8 @@ class VanillaServerRunner:
             "restart": (self.restart, 0), 
             "backup": (self.backup, 1),
             "exit": (self.exit, 0),
-            "delete_user_cache": (self.delete_user_cache, 0)
+            "delete_user_cache": (self.delete_user_cache, 0),
+            "schedule": (None, 0)
         }
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
@@ -115,6 +116,43 @@ class VanillaServerRunner:
         self.output_thread = None
         print(colored("Output thread dead. Server officially stopped.", "green"))
 
+    def __input_handler(self, cmd_input):
+        """
+        Handles input given by input thread/command line or a scheduled command
+        """
+        # TODO: Setup mutex for this function
+        # Empty Input
+        if len(cmd_input) == 0:
+            return
+        # Command to be sent to the server.jar
+        elif cmd_input[0] == '/':
+            if not self.server_process is None:
+                cmd_input_after_slash = cmd_input[1::]
+                print(cmd_input_after_slash)
+                print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
+                self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
+            else:
+                print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
+        # Command to be handled by ServerRunner
+        else:
+            cmd_input_args = cmd_input.split(" ")
+            command = cmd_input_args[0]
+            if command in self.commands_functions_dict:
+                print(colored("Command \"%s\" received!" % cmd_input, "green"))
+                fn = self.commands_functions_dict.get(command)[0]
+                if fn is None:
+                    print(colored("Command not programmed yet! Coming soon!", "yellow"))
+                else:
+                    args_required = self.commands_functions_dict.get(command)[1]
+                    if args_required == 0:
+                        fn()
+                    elif len(cmd_input_args) - 1 == args_required:
+                        fn(cmd_input_args[1::])
+                    else:
+                        print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+            else:
+                print(colored("Command not recognized", "red"))
+
     def __input_loop(self):
         """
         Handles incoming commands from the user.\n
@@ -126,38 +164,7 @@ class VanillaServerRunner:
 
             if isinstance(cmd_input, str):
                 cmd_input = cmd_input.strip()
-
-                # Empty Input
-                if len(cmd_input) == 0:
-                    continue
-                # Command to be sent to the server.jar
-                elif cmd_input[0] == '/':
-                    if not self.server_process is None:
-                        cmd_input_after_slash = cmd_input[1::]
-                        print(cmd_input_after_slash)
-                        print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
-                        self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
-                    else:
-                        print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
-                # Command to be handled by ServerRunner
-                else:
-                    cmd_input_args = cmd_input.split(" ")
-                    command = cmd_input_args[0]
-                    if command in self.commands_functions_dict:
-                        print(colored("Command \"%s\" received!" % cmd_input, "green"))
-                        fn = self.commands_functions_dict.get(command)[0]
-                        if fn is None:
-                            print(colored("Command not programmed yet! Coming soon!", "yellow"))
-                        else:
-                            args_required = self.commands_functions_dict.get(command)[1]
-                            if args_required == 0:
-                                fn()
-                            elif len(cmd_input_args) - 1 == args_required:
-                                fn(cmd_input_args[1::])
-                            else:
-                                print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
-                    else:
-                        print(colored("Command not recognized", "red"))
+                self.__input_handler(cmd_input)
             else:
                 self.server_process.sendline("stop".encode("utf-8"))
                 self.server_process.terminate(force=True)
