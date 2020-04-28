@@ -38,4 +38,4 @@ And of course, to delete, run `schedule delete {ID}`, in this example, the ID is
 
 ![Image Here](img/schedule_delete_example_out.PNG)
 
-And there you have it! There are more complicated schedules you can run. For those, you can reference the APScheduler documentation.
+And there you have it! You can run PyCraftServerManager commands as well (backup, restart, delete_user_cache, etc.). There are more complicated schedules you can run. For those, you can reference the APScheduler documentation.

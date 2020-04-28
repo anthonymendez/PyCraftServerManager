@@ -52,6 +52,7 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | backup            | Backs up Minecraft server folder to the folder backups in Project directory. Pass in argument "zip" for server folder to be stored in compressed ZIP folder. Pass in argument "tar" for server folder to be stored in compressed TAR file. | ["tar", "zip"]            |
 | exit              |  Quits the Python program. Stops Minecraft server if it is still running.                                                                                                                                                                  |                           |
 | delete_user_cache | Deletes `usercache.json` in Minecraft server folder.                                                                                                                                                                                       |                           |
+| schedule          | Schedules a command regularly. Uses APScheduler's cron-like structure to do so. See [APScheduler CronTriggers](https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html) and [How to Schedule like Cron](HOW_TO_CRON.md).   | ["Python Command or Server Command to Run"], ["Cron-like string"] |
 
 # How-to-Use
 
