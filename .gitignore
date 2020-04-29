@@ -138,3 +138,4 @@ dmypy.json
 
 # PyCraftServerManager
 backups/*
+server_jars
