@@ -17,6 +17,7 @@ from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from Utilities.Scheduler import Scheduler
+from ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
 
 if is_windows():
     import colorama
@@ -43,9 +44,9 @@ class VanillaServerRunner:
         # Set main directory of python project
         self.main_dir = os.getcwd()
         # Set server folder and server directory
-        self.set_server_folder_relative(server_folder)
+        self.__set_server_folder_relative(server_folder)
         # Set server jar filename
-        self.set_server_jar_filename(server_jar_filename)
+        self.__set_server_jar_filename(server_jar_filename)
         # Set up commands array
         self.commands_functions_dict = {
             # Terminal Command: (fn pointer, argument count)
@@ -57,6 +58,8 @@ class VanillaServerRunner:
             "delete_user_cache": (self.delete_user_cache, 0),
             "schedule": (self.schedule, -1)
         }
+        # Vanilla Server Downloader
+        self.VanillaServerDownloader = VanillaServerDownloader(self.main_dir, self.server_dir)
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
         # Whitelist Handler
@@ -299,7 +302,7 @@ class VanillaServerRunner:
         else:
             print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
 
-    def set_server_folder_relative(self, server_folder):
+    def __set_server_folder_relative(self, server_folder):
         """
         Set server folder and directory relative to main directory.\n
         Example inputs:\n
@@ -308,7 +311,7 @@ class VanillaServerRunner:
         self.server_folder = server_folder
         self.server_dir = os.path.join(self.main_dir, server_folder)
 
-    def set_server_jar_filename(self, server_jar_filename):
+    def __set_server_jar_filename(self, server_jar_filename):
         """
         Set name of the server jar.\n
         Example inputs:\n

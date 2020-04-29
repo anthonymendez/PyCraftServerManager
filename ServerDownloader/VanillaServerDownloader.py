@@ -7,13 +7,15 @@ from threading import Thread
 
 class VanillaServerDownloader():
 
-    def __init__(self):
+    def __init__(self, main_directory, server_directory):
         """
         Initializes Vanilla Server Downloader.
         """
         self.site = "https://mcversions.net"
         self.versions = []
         self.download_links = {}
+        self.main_directory = main_directory
+        self.server_directory = server_directory
 
     def parse_mojang_download_links(self):
         """
