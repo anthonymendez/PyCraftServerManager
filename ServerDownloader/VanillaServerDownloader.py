@@ -13,6 +13,9 @@ def parse_mojang_download_links():
     """
     Goes through site above and parses each download page for the Mojang download links for server jars.
     """
+    # Clear versions list and download links dictionary
+    versions.clear()
+    download_links.clear()
     # Get each page for a Minecraft version
     response = requests.get(site)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -52,9 +55,10 @@ def download_server_jar(version):
     """
     if not os.path.exists("server_jars"):
         os.mkdir("server_jars")
+    if len(download_links) == 0:
+        parse_mojang_download_links()
     link = download_links.get(version)
     file = requests.get(link)
     open(os.path.join("server_jars", str(version) + ".jar"), "wb").write(file.content)
 
-parse_mojang_download_links()
 download_server_jar("1.15.2")
