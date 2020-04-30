@@ -76,6 +76,7 @@ class VanillaServerRunner:
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
         self.input_thread.start()
+        self.server_process_eof = True
 
     def __run(self):
         """
@@ -93,6 +94,7 @@ class VanillaServerRunner:
         )
         # Spawn & Launch Server Terminal
         # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
+        self.server_process_eof = False
         if is_windows():
             self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
         # If OS is not windows, use pexpect.spawn as normal
@@ -101,6 +103,9 @@ class VanillaServerRunner:
         self.output_thread = Thread(target=self.__output_loop)
         sleep(0.1)
         self.output_thread.start()
+        # Watching server process
+        self.server_process_watch = Thread(target=self.__server_process_wait)
+        self.server_process_watch.start()
         # Change directory to python project
         os.chdir(self.main_directory)
 
@@ -108,12 +113,15 @@ class VanillaServerRunner:
         """
         Stop server along with output thread.
         """
-        self.server_process.sendline("stop".encode("utf-8"))
+        try:
+            self.server_process.sendline("stop".encode("utf-8"))
+        except Exception as e:
+            pass
         print(colored("Waiting for server process to die.", "green"))
         if is_windows():
             # Similar to below but for Windows since we don't have isalive for Popen_Spawn
             # From pexpect docs: pexpect.EOF is raised when EOF is read from a child. This usually means the child has exited.
-            self.server_process.expect(pexpect.EOF)
+            self.server_process.wait()
         else:
             # Check if pexpect.spawn is still alive
             while True:
@@ -182,7 +190,8 @@ class VanillaServerRunner:
         All other commands will be checked to see if they're supported by the program.
         """
         while not self.stopping_all:
-            cmd_input = input(">")
+            # TODO: Figure out how to put input on bottom of terminal always
+            cmd_input = input()
 
             if isinstance(cmd_input, str):
                 cmd_input = cmd_input.strip()
@@ -193,11 +202,11 @@ class VanillaServerRunner:
                 break
 
     def __output_loop(self):
-        while self.server_process is not None:
+        while self.server_process is not None and not self.server_process_eof:
             try:
                 output = self.server_process.readline().decode("utf-8").strip()
                 if not len(output) == 0:
-                    print("\b" + output + "\n>", end = "")
+                    print(output + "\n", end = "")
                 elif not self.input_thread.isAlive():
                     self.server_process.sendline("stop".encode("utf-8"))
                     if self.server_process.isalive():
@@ -212,6 +221,13 @@ class VanillaServerRunner:
                 # if not self.server_process is None:
                 #     self.stop()
                 break
+        self.server_process = None
+        print(colored("Server Process stopped", "yellow"))
+
+    def __server_process_wait(self):
+        # TODO: Possible Windows Compatibility thing?
+        self.server_process.wait()
+        self.server_process_eof = True
 
     def start(self):
         """
