@@ -13,6 +13,7 @@ from termcolor import colored
 from pexpect import popen_spawn
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
 from datetime import datetime
+from shutil import copy
 from Configuration.WhitelistHandler import WhitelistHandler
 from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
@@ -29,24 +30,25 @@ class VanillaServerRunner:
     Server jar, and configuring the launch parameters.
     """
 
-    server_process = None
-    input_thread = None
-    output_thread = None
-
     def __init__(self, server_folder, *args, **kwargs):
         """
         Sets server folder location relative to python project.\n
         Example inputs:\n 
         \t\"../server/\" - Back one directory, then into server folder
         """
+        # Server running variables
+        self.server_process = None
+        self.input_thread = None
+        self.output_thread = None
         # Handle optional arguments
-        server_jar_filename = kwargs.get('server_jar_filename', "server.jar")
+        self.server_jar_filename = kwargs.get('server_jar_filename', "server.jar")
         # Set main directory of python project
-        self.main_dir = os.getcwd()
+        self.main_directory = os.getcwd()
         # Set server folder and server directory
-        self.__set_server_folder_relative(server_folder)
-        # Set server jar filename
-        self.__set_server_jar_filename(server_jar_filename)
+        self.server_folder = server_folder
+        self.server_dir = os.path.join(self.main_directory, server_folder)
+        # Set server jar folder
+        self.server_jars = "server_jars"
         # Set up commands array
         self.commands_functions_dict = {
             # Terminal Command: (fn pointer, argument count)
@@ -56,18 +58,19 @@ class VanillaServerRunner:
             "backup": (self.backup, 1),
             "exit": (self.exit, 0),
             "delete_user_cache": (self.delete_user_cache, 0),
-            "schedule": (self.schedule, -1)
+            "schedule": (self.schedule, -1),
+            "jar": (self.jar, -1)
         }
         # Vanilla Server Downloader
-        self.VanillaServerDownloader = VanillaServerDownloader(self.main_dir, self.server_dir)
+        self.VanillaServerDownloader = VanillaServerDownloader(self.main_directory, self.server_dir, self.server_jars)
         # Server Properties Handler
-        self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_dir, self.server_dir)
+        self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_directory, self.server_dir)
         # Whitelist Handler
-        self.WhitelistHandler = WhitelistHandler(self.main_dir, self.server_dir)
+        self.WhitelistHandler = WhitelistHandler(self.main_directory, self.server_dir)
         # Launch Options Handler
-        self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_dir, self.server_dir)
+        self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_directory, self.server_dir)
         # Scheduler Class
-        self.Scheduler = Scheduler(self.main_dir, self.server_dir, self.__input_handler)
+        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler)
         # Start up input thread
         self.input_handler_lock = Lock()
         self.stopping_all = False
@@ -99,7 +102,7 @@ class VanillaServerRunner:
         sleep(0.1)
         self.output_thread.start()
         # Change directory to python project
-        os.chdir(self.main_dir)
+        os.chdir(self.main_directory)
 
     def __stop(self):
         """
@@ -157,13 +160,18 @@ class VanillaServerRunner:
                     else:
                         args_required = self.commands_functions_dict.get(command)[1]
                         if args_required == -1:
-                            fn(cmd_input)
+                            fn_return = fn(cmd_input)
                         elif args_required == 0:
-                            fn()
+                            fn_return = fn()
                         elif len(cmd_input_args) - 1 == args_required:
-                            fn(cmd_input_args[1::])
+                            fn_return = fn(cmd_input_args[1::])
                         else:
                             print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+
+                        # Check what function returned if it did return anything
+                        if isinstance(fn_return, bool):
+                            if not fn_return:
+                                print(colored("Command \"%s\" did not run successfully." % cmd_input, "red"))
                 else:
                     print(colored("Command not recognized", "red"))
 
@@ -206,6 +214,9 @@ class VanillaServerRunner:
                 break
 
     def start(self):
+        """
+        Starts the server. If it is already started, does nothing.
+        """
         if self.server_process is None:
             print(colored("Starting server...", "green"))
             self.__run()
@@ -213,6 +224,9 @@ class VanillaServerRunner:
             print(colored("Server already running!", "yellow"))
 
     def stop(self):
+        """
+        Stops the server. If it is already stopped, does nothing.
+        """
         if self.server_process is None:
             print(colored("Server is not running!", "yellow"))
         else:
@@ -220,6 +234,9 @@ class VanillaServerRunner:
             self.__stop()
 
     def restart(self):
+        """
+        Restarts the server if it is running. Does nothing if server isn't running.
+        """
         if self.server_process is None:
             print(colored("Server is not running!", "yellow"))
         else:
@@ -230,14 +247,23 @@ class VanillaServerRunner:
                 if (self.server_process is None):
                     break
             self.start()
-            print(colored("Restart process done!", "green"))
+            print(colored("Restart process done! Wait for server to start!", "green"))
 
     def exit(self):
+        """
+        Stops server if it's running and quits program.
+        """
         self.stopping_all = True
         if not self.server_process is None:
             self.stop()
 
     def backup(self, cmd_input_args):
+        """
+        Backs up server folder into a tar or zip archive.\n
+        Places archive folder into backups folder.\n
+        Terminal calls command like so"\n
+        `backup tar` or `backup zip`\n
+        """
         # Check if it's just a string. Hacky bug fix for Scheduler calling.
         if isinstance(cmd_input_args, str):
             cmd_input_args = [cmd_input_args]
@@ -266,6 +292,10 @@ class VanillaServerRunner:
         print(colored("Backed up server files.", "green"))
 
     def delete_user_cache(self):
+        """
+        Deletes usercache.json in server folder if server is not running.\n
+        Does nothing if server is not running.
+        """
         if self.server_process is None:
             print(colored("Deleting user cache.", "green"))
             usercache_file = os.path.join(self.server_dir, "usercache.json")
@@ -302,22 +332,52 @@ class VanillaServerRunner:
         else:
             print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
 
-    def __set_server_folder_relative(self, server_folder):
+    def jar(self, cmd_input_args):
         """
-        Set server folder and directory relative to main directory.\n
-        Example inputs:\n
-        \t\"../server/\" - Back one directory, then into server folder
+        Performs any of the server jar related functions.\n
+        To call in terminal:\n
+        `jar copy 1.15.2`, `jar download 1.15.2`, etc.\n
+        To call function in Python:\n
+        `VanillaServerRunnerObject.jar("copy 1.15.2")`\n
+        or\n
+        `VanillaServerRunnerObject.jar(["copy", "1.15.2"])`\n
+        Returns boolean if it was successful.
         """
-        self.server_folder = server_folder
-        self.server_dir = os.path.join(self.main_dir, server_folder)
+        # Turn into list for easier processing
+        if isinstance(cmd_input_args, str):
+            cmd_input_args = cmd_input_args.split(" ")
+            if len(cmd_input_args) < 2:
+                print(cmd_input_args)
+                return False
+            cmd_input_args = cmd_input_args[1::]
+        # Check if passed in list is valid
+        elif isinstance(cmd_input_args, list):
+            if len(cmd_input_args) < 2:
+                return False
+        # Didn't pass in valid object
+        else:
+            return False
 
-    def __set_server_jar_filename(self, server_jar_filename):
-        """
-        Set name of the server jar.\n
-        Example inputs:\n
-        \t\"server.jar\"
-        """
-        self.server_jar_filename = server_jar_filename
+        # Check first argument if it's a valid command type
+        valid_commands = ["set", "delete", "copy", "download", "delete", "update"]
+        if not cmd_input_args[0] in valid_commands:
+            return False
+        
+        # Check command type, pass off to function
+        if cmd_input_args[0] == "set":
+            return self.__jar_set(cmd_input_args[1])
+        elif cmd_input_args[0] == "delete":
+            return self.__jar_delete(cmd_input_args[1])
+        elif cmd_input_args[0] == "copy":
+            return self.__jar_copy(cmd_input_args[1])
+        elif cmd_input_args[0] == "download":
+            return self.__jar_download(cmd_input_args[1])
+        elif cmd_input_args[0] == "delete":
+            return self.__jar_delete(cmd_input_args[1])
+        elif cmd_input_args[0] == "update":
+            return self.__jar_update()
+        else:
+            return False
 
     def __backup_as_zip(self, archive_path):
         """
@@ -340,3 +400,80 @@ class VanillaServerRunner:
         print(colored("Creating and compressing tar file.", "green"))
         with tarfile.open(archive_path, "w:gz") as tar:
             tar.add(".", arcname=os.path.basename(self.server_dir))
+
+    def __jar_set(self, jar):
+        """
+        Sets specified jar to use in server folder.\n
+        Check if jar is in the server folder before switching to it.\n
+        Run in terminal like so:
+        `jar set 1.15.2`\n
+        Returns boolean if it was successful.
+        """
+        jar_path = jar + ".jar"
+        if not os.path.isfile(os.path.join(self.server_dir, jar_path)):
+            return False
+
+        self.server_jar_filename = jar_path
+        return True
+
+    def __jar_delete(self, jar):
+        """
+        Deletes specified jar in the server folder.\n
+        Check if jar is in the server folder before deleting.\n
+        Run in terminal like so:
+        `jar delete 1.15.2`\n
+        Returns boolean if file was deleted.
+        """
+        # Check if file exists
+        jar_path = os.path.join(self.server_dir, jar + ".jar")
+        if not os.path.isfile(jar_path):
+            return False
+
+        try:
+            os.remove(jar_path)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def __jar_copy(self, jar):
+        """
+        Copies specified server jar from server jars folder to server folder.\n
+        Vanilla Server Runner will now point to the newly placed server jar.\n
+        Run in terminal like so:\n
+        `jar copy 1.15.2`\n
+        Returns boolean if it was successful.
+        """
+        # Check if file exists
+        jar_path = os.path.join(self.server_jars, jar + ".jar")
+        if not os.path.isfile(jar_path):
+            return False
+
+        # Copy file to server directory
+        to_copy_path = os.path.join(self.server_dir, jar + ".jar")
+        try:
+            copy(jar_path, to_copy_path)
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def __jar_download(self, version):
+        """
+        Downloads specified server jar in server backups folder.\n
+        Run in terminal like so:\n
+        `jar download 1.15.2`\n
+        Returns boolean if it was successful.
+        """
+        success = self.VanillaServerDownloader.download_server_jar(version)
+        return success
+
+    def __jar_update(self):
+        """
+        Updates the local download link database of server jars.\n
+        Run in terminal like so:\n
+        `jar update`\n
+        Returns boolean if it was successful.
+        """
+        success = self.VanillaServerDownloader.parse_mojang_download_links()
+        return success
