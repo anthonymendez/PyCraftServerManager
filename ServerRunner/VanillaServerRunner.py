@@ -396,9 +396,49 @@ class VanillaServerRunner:
 
     def launch_options(self, cmd_input_args):
         """
-        
+        Handles running Launch Option functions and commands from terminal.
         """
-        return False
+        # Turn into list for easier processing
+        if isinstance(cmd_input_args, str):
+            cmd_input_args = cmd_input_args.split(" ")
+            if len(cmd_input_args) < 2:
+                print(cmd_input_args)
+                return False
+            cmd_input_args = cmd_input_args[1::]
+        # Check if passed in list is valid
+        elif isinstance(cmd_input_args, list):
+            if len(cmd_input_args) < 4:
+                return False
+        # Didn't pass in valid object
+        else:
+            return False
+
+        # Check first argument if it's a valid command type
+        valid_commands = ["list", "add", "delete"]
+        if not cmd_input_args[0] in valid_commands:
+            return False
+        
+        # Check if argument count matches each one
+        if cmd_input_args[0] == "list" and len(cmd_input_args) == 1:
+            self.LaunchOptionsHandler.read_options()
+            print("""%s\n%s\n%s\n%s""" % 
+                    (   self.LaunchOptionsHandler.java_section,
+                        self.LaunchOptionsHandler.java_options,
+                        self.LaunchOptionsHandler.game_section,
+                        self.LaunchOptionsHandler.game_options
+                    )
+                )
+        elif cmd_input_args[0] == "add" and len(cmd_input_args) == 3:
+            option = cmd_input_args[1]
+            is_java_option = bool(cmd_input_args[2])
+            self.LaunchOptionsHandler.add_option(option, is_java_option)
+        elif cmd_input_args[0] == "delete" and len(cmd_input_args) == 2:
+            option = cmd_input_args[1]
+            self.LaunchOptionsHandler.delete_option(option)
+        else:
+            return False
+
+        return True
 
     def server_properties(self, cmd_input_args):
         """
