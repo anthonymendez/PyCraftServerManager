@@ -61,6 +61,9 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | launch_options list | Print out the options currently in the launch.properties file. | |
 | launch_options add | Add option the launch.properties file. | ["Option"],["True/False"] |
 | launch_options delete | Remove option from the launch.properties file. | ["Option"] |
+| server_properties list | Print out the properties currently in the server.properties file. | |
+| server_properties set | Set a property value in the launch.properties file. | ["Property"],["Value"] |
+| server_properties get | Gets the value of a property in launch.properties file. | ["Property"] |
 
 # How-to-Use
 
