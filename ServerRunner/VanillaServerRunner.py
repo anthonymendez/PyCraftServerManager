@@ -59,7 +59,10 @@ class VanillaServerRunner:
             "exit": (self.exit, 0),
             "delete_user_cache": (self.delete_user_cache, 0),
             "schedule": (self.schedule, -1),
-            "jar": (self.jar, -1)
+            "jar": (self.jar, -1),
+            "launch_options": (self.launch_options, -1),
+            "server_properties": (self.server_properties, -1),
+            "whitelist": (self.whitelist, -1)
         }
         # Vanilla Server Downloader
         self.VanillaServerDownloader = VanillaServerDownloader(self.main_directory, self.server_dir, self.server_jars)
@@ -390,6 +393,24 @@ class VanillaServerRunner:
             return self.__jar_update()
         else:
             return False
+
+    def launch_options(self, cmd_input_args):
+        """
+        
+        """
+        return False
+
+    def server_properties(self, cmd_input_args):
+        """
+        
+        """
+        return False
+
+    def whitelist(self, cmd_input_args):
+        """
+        
+        """
+        return False
 
     def __backup_as_zip(self, archive_path):
         """
