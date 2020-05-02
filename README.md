@@ -58,6 +58,9 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | jar update | Updates the local download link database of server jars. | |
 | jar download  | Downloads the specified jar version into the server_jars folder. | ["Minecraft Version"] |
 | jar set | Copies server jar from server_jars folder in to the server folder. Deletes any jar in the server folder. Sets the copied jar file to run from the server folder. | ["Minecraft Version"] |
+| launch_options list | Print out the options currently in the launch.properties file. | |
+| launch_options add | Add option the launch.properties file. | ["Option"],["True/False"] |
+| launch_options delete | Remove option from the launch.properties file. | ["Option"] |
 
 # How-to-Use
 
