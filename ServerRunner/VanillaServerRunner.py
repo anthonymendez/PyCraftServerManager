@@ -71,6 +71,8 @@ class VanillaServerRunner:
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_directory, self.server_dir)
         # Scheduler Class
         self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler)
+        # Enable Eula
+        self.__enable_eula()
         # Start up input thread
         self.input_handler_lock = Lock()
         self.stopping_all = False
@@ -464,3 +466,24 @@ class VanillaServerRunner:
         """
         success = self.VanillaServerDownloader.parse_mojang_download_links()
         return success
+
+    def __enable_eula(self):
+        """
+        Enables eula in eula.txt.
+        """
+        # Check if it exists
+        eula_path = os.path.join(self.server_dir, "eula.txt")
+        if not os.path.isfile(eula_path):
+            # Create eula.txt
+            try:
+                open(eula_path, "w").write("eula=true")
+                return True
+            except Exception as e:
+                return False
+
+        # If it does exist, just write eula=true
+        try:
+            open(eula_path, "w").write("eula=true")
+            return True
+        except Exception as e:
+            return False
