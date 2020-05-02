@@ -57,9 +57,7 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | schedule list     | Lists all the currently scheduled commands.                                                                                                                                                                                                |                           |
 | jar update | Updates the local download link database of server jars. | |
 | jar download  | Downloads the specified jar version into the server_jars folder. | ["Minecraft Version"] |
-| jar copy | Copies the specified jar file (without .jar) from the server_jars folder into the server folder. | ["Server Jar Filename"] |
-| jar delete | Deletes specified jar file (without .jar) from the server folder. | ["Server Jar Filename"] |
-| jar set | Sets the specified jar file (without .jar) to run from the server folder. | ["Server Jar Filename"] |
+| jar set | Copies server jar from server_jars folder in to the server folder. Deletes any jar in the server folder. Sets the copied jar file to run from the server folder. | ["Minecraft Version"] |
 
 # How-to-Use
 
