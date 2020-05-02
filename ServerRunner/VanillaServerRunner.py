@@ -442,9 +442,38 @@ class VanillaServerRunner:
 
     def server_properties(self, cmd_input_args):
         """
-        
+        Handles running Server Properties functions and commands from terminal.
         """
-        return False
+        # Turn into list for easier processing
+        if isinstance(cmd_input_args, str):
+            cmd_input_args = cmd_input_args.split(" ")
+            if len(cmd_input_args) < 2:
+                print(cmd_input_args)
+                return False
+            cmd_input_args = cmd_input_args[1::]
+        # Check if passed in list is valid
+        elif isinstance(cmd_input_args, list):
+            if len(cmd_input_args) < 4:
+                return False
+        # Didn't pass in valid object
+        else:
+            return False
+
+        # Check first argument if it's a valid command type
+        valid_commands = ["list", "set", "get"]
+        if not cmd_input_args[0] in valid_commands:
+            return False
+
+        # Run each command
+        if cmd_input_args[0] == "list" and len(cmd_input_args) < 2:
+            print(self.ServerPropertiesHandler.read_server_properties_lines())
+        elif cmd_input_args[0] == "set" and len(cmd_input_args) < 4:
+            self.ServerPropertiesHandler.set_property(cmd_input_args[1], cmd_input_args[2])
+        elif cmd_input_args[0] == "get" and len(cmd_input_args) < 3:
+            print(self.ServerPropertiesHandler.get_property(cmd_input_args[1]))
+        else:
+            return False
+        return True
 
     def whitelist(self, cmd_input_args):
         """
