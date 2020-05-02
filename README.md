@@ -62,8 +62,12 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | launch_options add | Add option the launch.properties file. | ["Option"],["True/False"] |
 | launch_options delete | Remove option from the launch.properties file. | ["Option"] |
 | server_properties list | Print out the properties currently in the server.properties file. | |
-| server_properties set | Set a property value in the launch.properties file. | ["Property"],["Value"] |
-| server_properties get | Gets the value of a property in launch.properties file. | ["Property"] |
+| server_properties set | Set a property value in the server.properties file. | ["Property"],["Value"] |
+| server_properties get | Gets the value of a property in server.properties file. | ["Property"] |
+| whitelist get players | Prints out the list of players from the whitelist. | |
+| whitelist get ids | Prints out the list of players and their UUID from the whitelist. | |
+| whitelist add | Adds a player to the whitelist. | ["Player Name"] |
+| whitelist remove | Removes a player from the whitelist. | ["Player Name"] |
 
 # How-to-Use
 

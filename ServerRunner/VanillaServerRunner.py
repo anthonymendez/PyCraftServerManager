@@ -477,9 +477,44 @@ class VanillaServerRunner:
 
     def whitelist(self, cmd_input_args):
         """
-        
+        Handles running Whitelist functions and commands from terminal.
         """
-        return False
+        # Turn into list for easier processing
+        if isinstance(cmd_input_args, str):
+            cmd_input_args = cmd_input_args.split(" ")
+            if len(cmd_input_args) < 2:
+                print(cmd_input_args)
+                return False
+            cmd_input_args = cmd_input_args[1::]
+        # Check if passed in list is valid
+        elif isinstance(cmd_input_args, list):
+            if len(cmd_input_args) < 4:
+                return False
+        # Didn't pass in valid object
+        else:
+            return False
+
+        # Check first argument if it's a valid command type
+        valid_commands = ["get", "add", "delete"]
+        if not cmd_input_args[0] in valid_commands:
+            return False
+
+        # Run commands
+        if cmd_input_args[0] == "get" and len(cmd_input_args) == 2:
+            if cmd_input_args[1] == "players":
+                print(self.WhitelistHandler.get_players())
+            elif cmd_input_args[1] == "ids":
+                print(self.WhitelistHandler.get_players_uuids())
+            else:
+                return False
+        elif cmd_input_args[0] == "add" and len(cmd_input_args) == 2:
+            self.WhitelistHandler.add_player(cmd_input_args[1])
+        elif cmd_input_args[0] == "remove" and len(cmd_input_args) == 2:
+            self.WhitelistHandler.remove_player(cmd_input_args[1])
+        else:
+            return False
+        
+        return True
 
     def __backup_as_zip(self, archive_path):
         """
