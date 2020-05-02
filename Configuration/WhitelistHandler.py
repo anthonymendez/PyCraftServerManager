@@ -31,6 +31,8 @@ class WhitelistHandler:
                     player_names.append(name)
         except json.decoder.JSONDecodeError:
             print("Couldn't decode JSON")
+        except Exception as e:
+            print(e)
         os.chdir(self.main_directory)
         return player_names
 
@@ -53,6 +55,8 @@ class WhitelistHandler:
                     player_uuids.append(player_uuid)
         except json.decoder.JSONDecodeError:
             print("Couldn't decode JSON")
+        except Exception as e:
+            print(e)
         os.chdir(self.main_directory)
         return player_uuids
 
@@ -62,16 +66,19 @@ class WhitelistHandler:
         """
         os.chdir(self.server_directory)
         # Remove from local object
-        with open(WhitelistHandler.whitelist_json, "r") as json_file:
-            whitelist = json.load(json_file)
-            for i in range(len(whitelist)):
-                if whitelist[i]["name"] == player_name:
-                    whitelist.pop(i)
-                    break
-        # Save changes to whitelist file
-        open(WhitelistHandler.whitelist_json, "w").write(
-            json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
-        )
+        try:
+            with open(WhitelistHandler.whitelist_json, "r") as json_file:
+                whitelist = json.load(json_file)
+                for i in range(len(whitelist)):
+                    if whitelist[i]["name"] == player_name:
+                        whitelist.pop(i)
+                        break
+            # Save changes to whitelist file
+            open(WhitelistHandler.whitelist_json, "w").write(
+                json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
+            )
+        except Exception as e:
+            print(e)
         os.chdir(self.main_directory)
 
     def add_player(self, player_name):
@@ -85,14 +92,20 @@ class WhitelistHandler:
                 whitelist = json.load(json_file)
                 player_name = player_to_uuid(player_name)
                 whitelist.append(player_name)
+            # Save changes to whitelist file
+            open(WhitelistHandler.whitelist_json, "w").write(
+                json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
+            )
         except json.decoder.JSONDecodeError:
             print("Couldn't decode JSON, possibly empty?")
             player_name = player_to_uuid(player_name)
             whitelist = []
             whitelist.append(player_name)
-
-        # Save changes to whitelist file
-        open(WhitelistHandler.whitelist_json, "w").write(
-            json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
-        )
+            # Save changes to whitelist file
+            open(WhitelistHandler.whitelist_json, "w").write(
+                json.dumps(whitelist, sort_keys=True, indent=4, separators=(",", ": "))
+            )
+        except Exception as e:
+            print(e)
+        
         os.chdir(self.main_directory)
