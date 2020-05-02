@@ -375,21 +375,15 @@ class VanillaServerRunner:
             return False
 
         # Check first argument if it's a valid command type
-        valid_commands = ["set", "delete", "copy", "download", "delete", "update"]
+        valid_commands = ["set", "download", "update"]
         if not cmd_input_args[0] in valid_commands:
             return False
         
         # Check command type, pass off to function
         if cmd_input_args[0] == "set":
             return self.__jar_set(cmd_input_args[1])
-        elif cmd_input_args[0] == "delete":
-            return self.__jar_delete(cmd_input_args[1])
-        elif cmd_input_args[0] == "copy":
-            return self.__jar_copy(cmd_input_args[1])
         elif cmd_input_args[0] == "download":
             return self.__jar_download(cmd_input_args[1])
-        elif cmd_input_args[0] == "delete":
-            return self.__jar_delete(cmd_input_args[1])
         elif cmd_input_args[0] == "update":
             return self.__jar_update()
         else:
@@ -420,44 +414,12 @@ class VanillaServerRunner:
     def __jar_set(self, jar):
         """
         Sets specified jar to use in server folder.\n
-        Check if jar is in the server folder before switching to it.\n
-        Run in terminal like so:
-        `jar set 1.15.2`\n
-        Returns boolean if it was successful.
-        """
-        jar_path = jar + ".jar"
-        if not os.path.isfile(os.path.join(self.server_dir, jar_path)):
-            return False
-
-        self.server_jar_filename = jar_path
-        return True
-
-    def __jar_delete(self, jar):
-        """
-        Deletes specified jar in the server folder.\n
-        Check if jar is in the server folder before deleting.\n
-        Run in terminal like so:
-        `jar delete 1.15.2`\n
-        Returns boolean if file was deleted.
-        """
-        # Check if file exists
-        jar_path = os.path.join(self.server_dir, jar + ".jar")
-        if not os.path.isfile(jar_path):
-            return False
-
-        try:
-            os.remove(jar_path)
-            return True
-        except Exception as e:
-            print(e)
-            return False
-
-    def __jar_copy(self, jar):
-        """
-        Copies specified server jar from server jars folder to server folder.\n
-        Vanilla Server Runner will now point to the newly placed server jar.\n
+        Checks if jar exists in server_jars folder.\n
+        If so, copies to server folder and sets jar.\n
+        Otherwise, returns False.\n
+        Removes any other jar files in th server folder.\n
         Run in terminal like so:\n
-        `jar copy 1.15.2`\n
+        `jar set 1.15.2`\n
         Returns boolean if it was successful.
         """
         # Check if file exists
@@ -465,14 +427,23 @@ class VanillaServerRunner:
         if not os.path.isfile(jar_path):
             return False
 
+        # Remove all .jar files in server directory
+        server_dir_files = os.listdir(self.server_dir)
+        for s_d_file in server_dir_files:
+            if s_d_file.endswith(".jar"):
+                os.remove(os.path.join(self.server_dir, s_d_file))
+
         # Copy file to server directory
         to_copy_path = os.path.join(self.server_dir, jar + ".jar")
         try:
             copy(jar_path, to_copy_path)
-            return True
         except Exception as e:
             print(e)
             return False
+       
+        # Set server jar 
+        self.server_jar_filename = to_copy_path
+        return True        
 
     def __jar_download(self, version):
         """
