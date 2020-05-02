@@ -1,7 +1,7 @@
 from ServerRunner.VanillaServerRunner import VanillaServerRunner
 
 # Server Runner
-ServerRunner = VanillaServerRunner("../Vanilla_Server_Basic/")
+ServerRunner = VanillaServerRunner("server")
 
 # Server Properties Handler
 ServerPropertiesHandler = ServerRunner.ServerPropertiesHandler

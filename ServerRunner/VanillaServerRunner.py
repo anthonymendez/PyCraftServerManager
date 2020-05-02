@@ -47,6 +47,9 @@ class VanillaServerRunner:
         # Set server folder and server directory
         self.server_folder = server_folder
         self.server_dir = os.path.join(self.main_directory, server_folder)
+        # Create server directory if it doesn't exist
+        if os.path.exists(self.server_dir):
+            os.mkdir(self.server_dir)
         # Set server jar folder
         self.server_jars = "server_jars"
         # Set up commands array
