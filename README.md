@@ -55,6 +55,11 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 | schedule add      | Schedules a command regularly. Uses APScheduler's cron-like structure to do so. See [APScheduler CronTriggers](https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html) and [How to Schedule like Cron](HOW_TO_CRON.md).   | ["Python Command or Server Command to Run"], ["Cron-like string"] |\
 | schedule delete   | Deletes a command that is scheduled. Use ID to delete scheduled command from `schedule list` to find out a command's id.                                                                                                                   | [Command ID]              |
 | schedule list     | Lists all the currently scheduled commands.                                                                                                                                                                                                |                           |
+| jar update | Updates the local download link database of server jars. | |
+| jar download  | Downloads the specified jar version into the server_jars folder. | ["Minecraft Version"] |
+| jar copy | Copies the specified jar file (without .jar) from the server_jars folder into the server folder. | ["Server Jar Filename"] |
+| jar delete | Deletes specified jar file (without .jar) from the server folder. | ["Server Jar Filename"] |
+| jar set | Sets the specified jar file (without .jar) to run from the server folder. | ["Server Jar Filename"] |
 
 # How-to-Use
 
