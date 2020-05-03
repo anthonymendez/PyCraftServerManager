@@ -2,6 +2,7 @@ import os
 import pexpect
 import tarfile
 import re
+import logging
 
 # TODO Move to it's own module possibly
 def is_windows():
@@ -36,6 +37,14 @@ class VanillaServerRunner:
         Example inputs:\n 
         \t\"../server/\" - Back one directory, then into server folder
         """
+        # Set up Logging
+        time_now = str(datetime.now()).replace(" ", ".")
+        time_now = time_now.replace("-", ".")
+        time_now = time_now.replace(":", ".")
+        logging.basicConfig(format="%(asctime)s - %(filename)s - %(name)s - %(levelname)s - %(message)s", 
+                            filename=("pycraft_%s.log" % time_now), 
+                            level=logging.DEBUG)
+        logging.info("VanillaServerRunner Entry")
         # Server running variables
         self.server_process = None
         self.input_thread = None
