@@ -10,19 +10,23 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 
 * Launch Minecraft and PyCraft commands in the same terminal
 
-* Configure launch options, whitelist, and server properties through Python
+* Download Vanilla Minecraft Server Jars
+
+* Configure launch options, whitelist, and server properties through Python and terminal
 
 * Configure server launch Java or Game options. See [`launch_example.properties`](launch_example.properties).
 
 * Backup Server Files as ZIP or TAR through Python and terminal
 
-* Delete User Cache through Python and terminal
-
 * Schedule commands using cron-like scheduling. See [APScheduler CronTriggers](https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html) and [How to Schedule like Cron](HOW_TO_CRON.md).
+
+* Delete User Cache through Python and terminal
 
 # Intended Feature List
 
-* Configure launch options, whitelist, and server properties through command line
+* Download Spigot, Paper, Forge, SpongeVanilla, and Fabric Minecraft Server Jars
+
+* Launch applciation through a single executable
 
 # Required
 
