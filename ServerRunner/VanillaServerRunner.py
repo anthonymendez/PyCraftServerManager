@@ -38,13 +38,11 @@ class VanillaServerRunner:
         \t\"../server/\" - Back one directory, then into server folder
         """
         # Set up Logging
-        time_now = str(datetime.now()).replace(" ", ".")
-        time_now = time_now.replace("-", ".")
-        time_now = time_now.replace(":", ".")
-        logging.basicConfig(format="%(asctime)s - %(filename)s - %(name)s - %(levelname)s - %(message)s", 
-                            filename=("pycraft_%s.log" % time_now), 
-                            level=logging.DEBUG)
-        logging.debug("VanillaServerRunner Entry")
+        time_now = str(datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_").replace(".", "_")
+        logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s - %(levelname)s - %(message)s", 
+                            filename=("pycraft_master_%s.log" % time_now), 
+                            level=logging.INFO)
+        logging.info("Entry")
         # Server running variables
         self.server_process = None
         self.input_thread = None
@@ -91,6 +89,7 @@ class VanillaServerRunner:
         self.input_thread = Thread(target=self.__input_loop)
         self.input_thread.start()
         self.server_process_eof = True
+        logging.info("Exit")
 
     def __run(self):
         """

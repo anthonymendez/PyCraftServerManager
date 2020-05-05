@@ -5,6 +5,9 @@ import os
 from bs4 import BeautifulSoup
 from threading import Thread
 
+import logging as log
+logging = log.getLogger(__name__)
+
 class VanillaServerDownloader():
 
     def __init__(self, main_directory, server_directory, server_jars_folder):
@@ -12,17 +15,20 @@ class VanillaServerDownloader():
         Initializes Vanilla Server Downloader.\n
         For server_jars_folder, pass in relative location of intended server jars folder. Will create folder if it doesn't exist.
         """
+        logging.info("Entry")
         self.site = "https://mcversions.net"
         self.versions = []
         self.download_links = {}
         self.main_directory = main_directory
         self.server_directory = server_directory
         self.server_jars = server_jars_folder
+        logging.info("Exit")
 
     def parse_mojang_download_links(self):
         """
         Goes through site above and parses each download page for the Mojang download links for server jars.
         """
+        logging.info("Entry")
         try:
             # Clear versions list and download links dictionary
             self.versions.clear()
@@ -59,16 +65,18 @@ class VanillaServerDownloader():
             for t in thread_q:
                 t.join()
             thread_q.clear()
-            
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(e)
+            logging.error("Mojang Download Link scraping failed:\n\t%s", str(e))
+            logging.info("Exit")
             return False
 
     def download_server_jar(self, version):
         """
         Download a server jar based on the given version string.
         """
+        logging.info("Entry")
         try:
             if not os.path.exists(self.server_jars):
                 os.mkdir(self.server_jars)
@@ -78,7 +86,9 @@ class VanillaServerDownloader():
             link = self.download_links.get(version)
             file = requests.get(link)
             open(os.path.join(self.server_jars, str(version) + ".jar"), "wb").write(file.content)
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(e)
+            logging.error("Download of jar %s failed:\n\t%s", str(version), str(e))
+            logging.info("Exit")
             return False
