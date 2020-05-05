@@ -7,9 +7,10 @@ import pickle
 import logging as log
 logging = log.getLogger(__name__)
 
+from threading import Thread
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
-from threading import Thread
+from Utilities.DiskJobStore.DiskJobStore import DiskJobStore
 
 class Scheduler():
     """
@@ -32,6 +33,8 @@ class Scheduler():
         self.input_handler = input_handler
         self.list_file_path = os.path.join(self.main_directory, self.list_file_name)
         self.sched = BackgroundScheduler()
+        jobstore = DiskJobStore()
+        self.sched.add_jobstore(jobstore)
         self.sched.start()
         self.job_count = 0
         # Create scheduler.list file if it doesn't exist and create headers for it
