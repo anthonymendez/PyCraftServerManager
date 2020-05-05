@@ -2,6 +2,7 @@ import os
 import csv
 import pickle
 import re
+import pickle
 
 import logging as log
 logging = log.getLogger(__name__)
@@ -29,7 +30,7 @@ class Scheduler():
         self.main_directory = main_directory
         self.server_directory = server_directory
         self.input_handler = input_handler
-        self.list_file_path = os.path.join(self.server_directory, self.list_file_name)
+        self.list_file_path = os.path.join(self.main_directory, self.list_file_name)
         self.sched = BackgroundScheduler()
         self.sched.start()
         self.job_count = 0
@@ -117,6 +118,7 @@ class Scheduler():
             self.sched.add_job(function, trigger=ct, args=[function_args], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
+            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
@@ -199,6 +201,7 @@ class Scheduler():
             self.sched.add_job(self.input_handler, trigger=ct, args=[command], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
+            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
@@ -214,6 +217,7 @@ class Scheduler():
         try:
             self.sched.remove_job(job_id)
             logging.info("Removed job %s", str(job_id))
+            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
@@ -242,3 +246,19 @@ class Scheduler():
             logging.warning("Something went wrong with listing commands. %s", str(e))
             logging.info("Exit")
             return False
+
+    def __load(self):
+        """
+        Load instance of background scheduler from scheduler.list.
+        """
+        logging.info("Entry")
+        pass
+        logging.info("Exit")
+
+    def __save(self):
+        """
+        Save (and overwrite) current instance of background scheduler to scheduler.list.
+        """
+        logging.info("Entry")
+        pass
+        logging.info("Exit")
