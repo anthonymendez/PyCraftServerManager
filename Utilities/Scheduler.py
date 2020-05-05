@@ -3,6 +3,9 @@ import csv
 import pickle
 import re
 
+import logging as log
+logging = log.getLogger(__name__)
+
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from threading import Thread
@@ -21,6 +24,7 @@ class Scheduler():
         \tTying it to the server runner's input handler function
         \tCreating the scheduler file.
         """
+        logging.info("Entry")
         # Store all current server properties
         self.main_directory = main_directory
         self.server_directory = server_directory
@@ -31,9 +35,12 @@ class Scheduler():
         self.job_count = 0
         # Create scheduler.list file if it doesn't exist and create headers for it
         if not os.path.exists(self.list_file_path):
+            logging.info("Creating scheduler file.")
             list_file = open(self.list_file_path, 'w')
             list_file.write("")
             list_file.close()
+            logging.info("Created scheduler file.")
+        logging.info("Exit")
     
     def add_scheduled_function(self, function, function_args, cron_string):
         """
@@ -41,13 +48,18 @@ class Scheduler():
         Schedules using cron-like syntax.\n
         https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
         """
+        logging.info("Entry")
         # Check for None or empty strings
         if function == None or cron_string == None or len(cron_string) == 0:
+            logging.error("None or Empty strings present in arguments.")
+            logging.info("Exit")
             return False
 
         # Check if it fits the amount arguments needed for cron
         cron_list = cron_string.split(" ")
         if (len(cron_list) < 11 or len(cron_list) > 12):
+            logging.warning("Not 11 or 12 arguments in cron list. Count: %s", str(len(cron_list)))
+            logging.info("Exit")
             return False
 
         year = None if cron_list[0] == "*" else cron_list[0]
@@ -62,22 +74,39 @@ class Scheduler():
         end_date = None if cron_list[9] == "*" else cron_list[9]
         timezone = None if cron_list[10] == "*" else cron_list[10]
 
-        print("year \"" + str(year) + "\"")
-        print("month \"" + str(month) + "\"")
-        print("day \"" + str(day) + "\"")
-        print("week \"" + str(week) + "\"")
-        print("day_of_week \"" + str(day_of_week) + "\"")
-        print("hour \"" + str(hour) + "\"")
-        print("minute \"" + str(minute) + "\"")
-        print("second \"" + str(second) + "\"")
-        print("start_date \"" + str(start_date) + "\"")
-        print("end_date \"" + str(end_date) + "\"")
-        print("timezone \"" + str(timezone) + "\"")
+        cron_print_str = """year \"%s\"
+        month \"%s\"
+        day \"%s\"
+        week \"%s\"
+        day_of_week \"%s\"
+        hour \"%s\"
+        minute \"%s\"
+        second \"%s\"
+        start_date \"%s\"
+        end_date \"%s\"
+        timezone \"%s\"""" % (
+            str(year),
+            str(month),
+            str(day),
+            str(week),
+            str(day_of_week),
+            str(hour),
+            str(minute),
+            str(second),
+            str(start_date),
+            str(end_date),
+            str(timezone)
+        )
+        logging.debug(cron_print_str)
+        print(cron_print_str)
 
         # Check if jitter is exists
         jitter = None
         if (len(cron_list) == 12):
             jitter = cron_list[11]
+            jitter_str = "debug \"%s\"" % str(jitter)
+            logging.debug(jitter_str)
+            print(jitter_str)
 
         # Try to schedule command like a cron task
         try:
@@ -87,9 +116,12 @@ class Scheduler():
                             timezone=timezone, jitter=jitter)
             self.sched.add_job(function, trigger=ct, args=[function_args], id=str(self.job_count))
             self.job_count += 1
+            logging.info("Scheduled new command.")
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(str(e))
+            logging.warning("Something went wrong with scheduling command. %s", str(e))
+            logging.info("Exit")
             return False
 
     def add_scheduled_command(self, command, cron_string):
@@ -98,13 +130,18 @@ class Scheduler():
         Schedules using cron-like syntax.\n
         https://apscheduler.readthedocs.io/en/stable/modules/triggers/cron.html
         """
+        logging.info("Entry")
         # Check for empty strings
         if command == None or len(command) == 0 or cron_string == None or len(cron_string) == 0:
+            logging.error("None or Empty strings present in arguments.")
+            logging.info("Exit")
             return False
 
         # Check if it fits the amount arguments needed for cron
         cron_list = cron_string.split(" ")
         if (len(cron_list) < 11 or len(cron_list) > 12):
+            logging.warning("Not 11 or 12 arguments in cron list. Count: %s", str(len(cron_list)))
+            logging.info("Exit")
             return False
 
         year = None if cron_list[0] == "*" else cron_list[0]
@@ -119,22 +156,39 @@ class Scheduler():
         end_date = None if cron_list[9] == "*" else cron_list[9]
         timezone = None if cron_list[10] == "*" else cron_list[10]
 
-        print("year \"" + str(year) + "\"")
-        print("month \"" + str(month) + "\"")
-        print("day \"" + str(day) + "\"")
-        print("week \"" + str(week) + "\"")
-        print("day_of_week \"" + str(day_of_week) + "\"")
-        print("hour \"" + str(hour) + "\"")
-        print("minute \"" + str(minute) + "\"")
-        print("second \"" + str(second) + "\"")
-        print("start_date \"" + str(start_date) + "\"")
-        print("end_date \"" + str(end_date) + "\"")
-        print("timezone \"" + str(timezone) + "\"")
+        cron_print_str = """year \"%s\"
+        month \"%s\"
+        day \"%s\"
+        week \"%s\"
+        day_of_week \"%s\"
+        hour \"%s\"
+        minute \"%s\"
+        second \"%s\"
+        start_date \"%s\"
+        end_date \"%s\"
+        timezone \"%s\"""" % (
+            str(year),
+            str(month),
+            str(day),
+            str(week),
+            str(day_of_week),
+            str(hour),
+            str(minute),
+            str(second),
+            str(start_date),
+            str(end_date),
+            str(timezone)
+        )
+        logging.debug(cron_print_str)
+        print(cron_print_str)
 
         # Check if jitter is exists
         jitter = None
         if (len(cron_list) == 12):
             jitter = cron_list[11]
+            jitter_str = "debug \"%s\"" % str(jitter)
+            logging.debug(jitter_str)
+            print(jitter_str)
 
         # Try to schedule command like a cron task
         try:
@@ -144,26 +198,34 @@ class Scheduler():
                             timezone=timezone, jitter=jitter)
             self.sched.add_job(self.input_handler, trigger=ct, args=[command], id=str(self.job_count))
             self.job_count += 1
+            logging.info("Scheduled new command.")
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(str(e))
+            logging.warning("Something went wrong with scheduling command. %s", str(e))
+            logging.info("Exit")
             return False
 
     def delete_scheduled_command(self, job_id):
         """
         Removes scheduled command with the job's id.
         """
+        logging.info("Entry")
         try:
             self.sched.remove_job(job_id)
+            logging.info("Removed job %s", str(job_id))
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(e)
+            logging.warning("Something went wrong with removing command. %s", str(e))
+            logging.info("Exit")
             return False
 
     def list_scheduled_commands(self):
         """
         Returns list of currently scheduled jobs.
         """
+        logging.info("Entry")
         try:
             job_list = self.sched.get_jobs()
             for job in job_list:
@@ -172,8 +234,11 @@ class Scheduler():
                 job_info += "Args: %s; " % str(job.args)
                 job_info += "%s; " % str(job.trigger)
                 job_info += "Next run time: %s" % str(job.next_run_time)
+                logging.info(job_info)
                 print(job_info)
+            logging.info("Exit")
             return True
         except Exception as e:
-            print(e)
+            logging.warning("Something went wrong with listing commands. %s", str(e))
+            logging.info("Exit")
             return False
