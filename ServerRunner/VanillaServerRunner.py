@@ -39,8 +39,14 @@ class VanillaServerRunner:
         """
         # Set up Logging
         time_now = str(datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_").replace(".", "_")
+        log_path = os.path.join("log", time_now)
+        if not os.path.exists("log"):
+            os.mkdir("log")
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+        log_path = os.path.join(log_path, "master.log")
         logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s - %(levelname)s - %(message)s", 
-                            filename=("pycraft_master_%s.log" % time_now), 
+                            filename=log_path, 
                             level=logging.INFO)
         logging.info("Entry")
         # Server running variables
