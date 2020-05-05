@@ -1,5 +1,8 @@
 import os
 
+import logging as log
+logging = log.getLogger(__name__)
+
 class LaunchOptionsHandler:
     """
     Handles creating Java Option and Game Options string when launching the server jar.
@@ -15,16 +18,19 @@ class LaunchOptionsHandler:
         Also creates an empty string for Java and Game options.\n
         Reads in the options as well.
         """
+        logging.info("Entry")
         self.main_directory = main_directory
         self.server_directory = server_directory
         self.java_options = []
         self.game_options = []
         self.read_options()
+        logging.info("Exit")
 
     def read_options(self):
         """
         Goes through and reads the options for the game set java_options and game_options strings.
         """
+        logging.info("Entry")
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
         # If file does not exist, create it.
@@ -33,10 +39,12 @@ class LaunchOptionsHandler:
             lines = [self.java_section + "\n", self.game_section + "\n"]
             launch_properties_file.writelines(lines)
             launch_properties_file.close()
+            logging.info("File does not exist. Created.")
         else:
             launch_properties_file = open(launch_properties_path, "r")
             launch_properties_lines = launch_properties_file.readlines()
             launch_properties_file.close()
+            logging.info("File exists. Read.")
         # Clear out java and game options array
         self.java_options.clear()
         self.game_options.clear()
@@ -51,6 +59,8 @@ class LaunchOptionsHandler:
             if line == "":
                 continue
 
+            logging.debug("Line Before: \"%s\"", line)
+
             if line == LaunchOptionsHandler.java_section or line == LaunchOptionsHandler.game_section:
                 i += 1
                 continue
@@ -64,11 +74,16 @@ class LaunchOptionsHandler:
                 while not line[0:2] == "--":
                     line = "-" + line
 
+            logging.debug("Line After: \"%s\"", line)
+
             # Add to the appropriate option string
             if i == 1:
+                logging.info("Adding to Java Options.")
                 self.java_options.append(line)
             elif i == 2:
+                logging.info("Adding to Game Options")
                 self.game_options.append(line)
+        logging.info("Exit")
 
     def add_option(self, option, is_java_option):
         """
@@ -78,12 +93,15 @@ class LaunchOptionsHandler:
         NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.
         Returns a boolean saying whether or not it was successfully inserted.
         """
+        logging.info("Entry")
         # TODO: Add check to see if option was already added
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
         launch_properties_file = open(launch_properties_path, "r")        
         launch_properties_lines = launch_properties_file.readlines()
         launch_properties_file.close()
+
+        logging.debug("Option Before: %s", option)
 
         # Check if option is prepended with dashes
         # If it is not, prepend with dashes
@@ -94,11 +112,15 @@ class LaunchOptionsHandler:
             while not option[0:2] == '--':
                 option = '-' + option
 
+        logging.debug("Option After: %s", option)
+
         # Append new line
         option = option + "\n"
 
         # Check if the option is in any of lines, if so, we just return true
         if option in launch_properties_lines:
+            logging.info("Option already in launch properties.")
+            logging.info("Exit")
             return True
 
         # If not a Java option, we can just add it to the end of the lines
@@ -114,21 +136,23 @@ class LaunchOptionsHandler:
                 if line == LaunchOptionsHandler.game_section:
                     launch_properties_lines.insert(i, option)
                     inserted = True
+                    logging.debug("Inserted option.")
                     break
         else:
             launch_properties_lines.append(option)
+            logging.debug("Appended option.")
             inserted = True
 
         # Reopen launch.properties and write the modified lines
-        launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
-        launch_properties_file = open(launch_properties_path, "w")        
-        launch_properties_file.writelines(launch_properties_lines)
-        launch_properties_file.close()
-
-        # Reread options
         if inserted:
+            launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
+            launch_properties_file = open(launch_properties_path, "w")        
+            launch_properties_file.writelines(launch_properties_lines)
+            launch_properties_file.close()
             self.read_options()
+            logging.debug("Wrote changed option.")
 
+        logging.info("Exit")
         return inserted
 
     def delete_option(self, option):
@@ -138,9 +162,15 @@ class LaunchOptionsHandler:
         NOTE: Function will not perform error checking for valid option or format. It will only prepend with dashes. YOU need to check if the option is valid yourself.\n
         Returns a boolean saying whether or not it was successfully deleted.
         """
+        logging.info("Entry")
+        
+        logging.debug("Option Before: %s", option)
+
         # Strip option of dashes if it has any
         while option[0] == '-':
             option = option[1::]
+
+        logging.debug("Option After: %s", option)
 
         # Open launch.properties and read in all the lines
         launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
@@ -165,16 +195,16 @@ class LaunchOptionsHandler:
             if option == line:
                 launch_properties_lines.pop(i)
                 deleted = True
+                logging.debug("Deleted option.")
                 break
 
         # Reopen launch.properties and write the modified lines
-        launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
-        launch_properties_file = open(launch_properties_path, "w")        
-        launch_properties_file.writelines(launch_properties_lines)
-        launch_properties_file.close()
-
-        # Reread lines
         if deleted:
+            launch_properties_path = os.path.join(self.main_directory, LaunchOptionsHandler.launch_properties)
+            launch_properties_file = open(launch_properties_path, "w")        
+            launch_properties_file.writelines(launch_properties_lines)
+            launch_properties_file.close()
+            logging.debug("Wrote deleted option.")
             self.read_options()
 
         return deleted
