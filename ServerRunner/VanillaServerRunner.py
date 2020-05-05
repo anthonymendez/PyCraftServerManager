@@ -47,7 +47,7 @@ class VanillaServerRunner:
         log_path = os.path.join(log_path, "master.log")
         logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s - %(levelname)s - %(message)s", 
                             filename=log_path, 
-                            level=logging.INFO)
+                            level=logging.DEBUG)
         logging.info("Entry")
         # Server running variables
         self.server_process = None
@@ -95,12 +95,16 @@ class VanillaServerRunner:
         self.input_thread = Thread(target=self.__input_loop)
         self.input_thread.start()
         self.server_process_eof = True
+        logging.debug("server_jar_filename: %s", self.server_jar_filename)
+        logging.debug("server_jar folder: %s", self.server_jars)
+        logging.debug("command_functions_dict: %s", self.commands_functions_dict)
         logging.info("Exit")
 
     def __run(self):
         """
         Start server with options set in ServerRunner.
         """
+        logging.info("Entry")
         # Change directory to server location
         os.chdir(self.server_dir)
         # Update Launch Options Handler
@@ -111,80 +115,104 @@ class VanillaServerRunner:
             self.server_jar_filename,
             " ".join(self.LaunchOptionsHandler.game_options)
         )
+        logging.debug("Launch Parameters: %s", self.launch_str)
         # Spawn & Launch Server Terminal
         # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
         self.server_process_eof = False
         if is_windows():
             self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
+            logging.debug("Launched Windows server-process subroutine.")
         # If OS is not windows, use pexpect.spawn as normal
         else:
             self.server_process = pexpect.spawn(self.launch_str)
+            logging.debug("Launched normal server-process subroutine.")
         self.output_thread = Thread(target=self.__output_loop)
         sleep(0.1)
         self.output_thread.start()
+        logging.debug("Launched output subroutine")
         # Watching server process
         self.server_process_watch = Thread(target=self.__server_process_wait)
         self.server_process_watch.start()
+        logging.debug("Launched server-process watcher subroutine.")
         # Change directory to python project
         os.chdir(self.main_directory)
+        logging.info("Exit")
 
     def __stop(self):
         """
         Stop server along with output thread.
         """
+        logging.info("Entry")
         try:
             self.server_process.sendline("stop".encode("utf-8"))
+            logging.debug("Sent stop to server process.")
         except Exception as e:
-            pass
-        print(colored("Waiting for server process to die.", "green"))
+            logging.error("Could not send \"stop\" to server process. Reason:\n\t%s", str(e))
+        logging.info("Waiting for server-process to die.")
+        print(colored("Waiting for server-process to die.", "green"))
         if is_windows():
             # Similar to below but for Windows since we don't have isalive for Popen_Spawn
             # From pexpect docs: pexpect.EOF is raised when EOF is read from a child. This usually means the child has exited.
             self.server_process.wait()
+            logging.debug("Finished waiting for Windows server-process to die.")
         else:
             # Check if pexpect.spawn is still alive
             while True:
                 if self.server_process is None and not self.server_process.isalive():
                     break
+            logging.debug("Finished waiting for normal server-process to die.")
         self.server_process = None
+        logging.info("Server process dead (hopefully). Waiting for output thread to die.")
         print(colored("Server process dead (hopefully). Waiting for output thread to die.", "green"))
         while True:
             if self.output_thread is None or not self.output_thread.isAlive():
                 break
         self.output_thread = None
+        logging.info("Output thread dead. Server officially stopped.")
         print(colored("Output thread dead. Server officially stopped.", "green"))
+        logging.info("Exit")
 
     def __input_handler(self, cmd_input):
         """
         Handles input given by input thread/command line or a scheduled command
         """
-        # TODO: Setup mutex for this function
+        logging.info("Entry")
+        logging.info("cmd_input: %s", str(cmd_input))
         # Empty Input
         if len(cmd_input) == 0:
+            logging.error("__input_handler given empty input. Not valid.")
+            logging.info("Exit")
             return
 
         # Lock function
         # https://stackoverflow.com/a/10525433/12464369
         with self.input_handler_lock:
+            logging.debug("Acquired input handler lock.")
             # Command to be sent to the server.jar
             if cmd_input[0] == '/':
+                logging.info("Command is a Minecraft Server command.")
                 if not self.server_process is None:
                     cmd_input_after_slash = cmd_input[1::]
-                    print(cmd_input_after_slash)
+                    logging.debug("Command after slash: %s", cmd_input_after_slash)
+                    logging.info("Sending command to %s server... ", cmd_input_after_slash)
                     print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
                     self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
                 else:
-                    print(colored("Server has not started! Start server with \"start\" to start the server!", "red"))
+                    logging.warning("Server has not been started! Start server with \"start\" to start the server!")
+                    print(colored("Server has not been started! Start server with \"start\" to start the server!", "red"))
             # Command to be handled by ServerRunner
             else:
+                logging.info("Command is a PyCraftServerManager command.")
                 cmd_input_args = cmd_input.split(" ")
                 command = cmd_input_args[0]
                 if command in self.commands_functions_dict:
                     print(colored("Command \"%s\" received!" % cmd_input, "green"))
                     fn = self.commands_functions_dict.get(command)[0]
                     if fn is None:
+                        logging.warning("Command not programmed yet! Coming soon!")
                         print(colored("Command not programmed yet! Coming soon!", "yellow"))
                     else:
+                        logging.debug("Given valid command.")
                         args_required = self.commands_functions_dict.get(command)[1]
                         if args_required == -1:
                             fn_return = fn(cmd_input)
@@ -193,14 +221,22 @@ class VanillaServerRunner:
                         elif len(cmd_input_args) - 1 == args_required:
                             fn_return = fn(cmd_input_args[1::])
                         else:
+                            logging.warning("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required))
                             print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
 
                         # Check what function returned if it did return anything
                         if isinstance(fn_return, bool):
                             if not fn_return:
+                                logging.warning("Command \"%s\" did not run successfully." % cmd_input)
                                 print(colored("Command \"%s\" did not run successfully." % cmd_input, "red"))
+                            else:
+                                logging.debug("Command \"%s\" ran successfully." % cmd_input)
+
                 else:
-                    print(colored("Command not recognized", "red"))
+                    logging.warning("Command not recognizes.")
+                    print(colored("Command not recognized.", "red"))
+
+        logging.info("Exit")
 
     def __input_loop(self):
         """
@@ -208,19 +244,26 @@ class VanillaServerRunner:
         All commands prepended with "/" will be sent directly to the server.jar\n
         All other commands will be checked to see if they're supported by the program.
         """
+        logging.info("Entry")
         while not self.stopping_all:
             # TODO: Figure out how to put input on bottom of terminal always
+            logging.info("Waiting on user input.")
             cmd_input = input()
+            logging.info("User input: %s", str(cmd_input))
 
             if isinstance(cmd_input, str):
+                logging.info("Passing user input to input handler")
                 cmd_input = cmd_input.strip()
                 self.__input_handler(cmd_input)
             else:
+                logging.error("User input is not string. Stopping server process and terminating.")
                 self.server_process.sendline("stop".encode("utf-8"))
                 self.server_process.terminate(force=True)
                 break
+        logging.info("Exit")
 
     def __output_loop(self):
+        logging.info("Entry")
         while self.server_process is not None and not self.server_process_eof:
             try:
                 output = self.server_process.readline().decode("utf-8").strip()
@@ -241,56 +284,75 @@ class VanillaServerRunner:
                 #     self.stop()
                 break
         self.server_process = None
-        print(colored("Server Process stopped", "yellow"))
+        logging.info("Server Process stopped.")
+        print(colored("Server Process stopped.", "yellow"))
+        logging.info("Exit")
 
     def __server_process_wait(self):
         # TODO: Possible Windows Compatibility thing?
+        logging.info("Entry")
         self.server_process.wait()
         self.server_process_eof = True
+        logging.info("Exit")
 
     def start(self):
         """
         Starts the server. If it is already started, does nothing.
         """
+        logging.info("Entry")
         if self.server_process is None:
+            logging.info("Starting server...")
             print(colored("Starting server...", "green"))
             self.__run()
         else:
+            logging.warning("Server already running!")
             print(colored("Server already running!", "yellow"))
+        logging.info("Exit")
 
     def stop(self):
         """
         Stops the server. If it is already stopped, does nothing.
         """
+        logging.info("Entry")
         if self.server_process is None:
+            logging.warning("Server is not running!")
             print(colored("Server is not running!", "yellow"))
         else:
+            logging.info("Stopping server...")
             print(colored("Stopping server...", "green"))
             self.__stop()
+        logging.info("Exit")
 
     def restart(self):
         """
         Restarts the server if it is running. Does nothing if server isn't running.
         """
+        logging.info("Entry")
         if self.server_process is None:
+            logging.warning("Server is not running!")
             print(colored("Server is not running!", "yellow"))
         else:
             self.stop()
+            logging.info("Waiting for server to stop...")
             print(colored("Waiting for server to stop...", "yellow"))
             while(1):
                 sleep(1)
                 if (self.server_process is None):
                     break
             self.start()
+            logging.info("Restart process done! Wait for server to start!")            
             print(colored("Restart process done! Wait for server to start!", "green"))
+        logging.info("Exit")
 
     def exit(self):
         """
         Stops server if it's running and quits program.
         """
+        logging.info("Entry")
         self.stopping_all = True
         if not self.server_process is None:
             self.stop()
+        logging.info("Exit")
 
     def backup(self, cmd_input_args):
         """
@@ -299,6 +361,7 @@ class VanillaServerRunner:
         Terminal calls command like so"\n
         `backup tar` or `backup zip`\n
         """
+        logging.info("Entry")
         # Check if it's just a string. Hacky bug fix for Scheduler calling.
         if isinstance(cmd_input_args, str):
             cmd_input_args = [cmd_input_args]
@@ -306,9 +369,8 @@ class VanillaServerRunner:
         backup_type = cmd_input_args[0].lower()
         
         # Create name for archive based on time space
-        time_now = str(datetime.now()).replace(" ", ".")
-        time_now = time_now.replace("-", ".")
-        time_now = time_now.replace(":", ".")
+        time_now = str(datetime.now()).replace(" ", ".").replace("-", ".").replace(":", ".")
+        logging.info("Compressed archive file name: %s.%s" % (time_now, backup_type))
         print(colored("Compressed archive file name: %s" % time_now, "green"))
 
         # Create folder to store backups
@@ -322,23 +384,32 @@ class VanillaServerRunner:
         elif backup_type == "tar":
             self.__backup_as_tar(archive_path + ".tar.gz")
         else:
+            logging.warning("Invalid Backup Type of \"%s\" passed in. Not backing up." % backup_type)
             print(colored("Invalid Backup Type of \"%s\" passed in. Not backing up." % backup_type, "red"))
+            logging.info("Exit")
             return
         print(colored("Backed up server files.", "green"))
+        logging.info("Exit")
 
     def delete_user_cache(self):
         """
         Deletes usercache.json in server folder if server is not running.\n
         Does nothing if server is not running.
         """
+        logging.info("Entry")
         if self.server_process is None:
+            logging.info("Deleting user cache.")
             print(colored("Deleting user cache.", "green"))
             usercache_file = os.path.join(self.server_dir, "usercache.json")
             os.remove(usercache_file)
+            logging.info("Deleted user cache.")
         else:
-            print(colored("Server is running. Cannot delete user cache." % time_now, "red"))
+            logging.warning("Server is running. Cannot delete user cache.")
+            print(colored("Server is running. Cannot delete user cache.", "red"))
+        logging.info("Exit")
 
     def schedule(self, cmd_input_args):
+        logging.info("Entry")
         # Check what type of schedule command it is
         schedule_command_type = cmd_input_args.split(" ")[1]
         # Add new scheduled command
@@ -348,24 +419,35 @@ class VanillaServerRunner:
             cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
             command = cmd_inputs_args_quoted[0]
             cron = cmd_inputs_args_quoted[1]
+            logging.debug("Command: %s", command)
+            logging.debug("Cron: %s", cron)
             print(cmd_inputs_args_quoted)
             # Create scheduled command
             if (self.Scheduler.add_scheduled_command(command, cron)):
+                logging.info("Command successfully scheduled!")
                 print(colored("Command successfully scheduled!", "green"))
             else:
+                logging.warning("Command not scheduled!")
                 print(colored("Command not scheduled!", "red"))
         # List all scheduled commands
         elif (schedule_command_type == "list"):
+            logging.info("Listing scheduled commands.")
             if (not self.Scheduler.list_scheduled_commands()):
+                logging.error("Something went wrong listing scheduled jobs!")
                 print(colored("Something went wrong listing scheduled jobs!", "red"))
         # Delete command
         elif (schedule_command_type == "delete"):
+            logging.info("Deleting scheduled command.")
             job_id = cmd_input_args.split(" ")[2]
+            logging.debug("job_id: %s", str(job_id))
             if (not self.Scheduler.delete_scheduled_command(job_id)):
+                logging.error("Something went wrong deleting a scheduled job!")
                 print(colored("Something went wrong deleting a scheduled job!", "red"))
         # Not a valid command
         else:
+            logging.warning("%s is not a valid schedule command type.", schedule_command_type)
             print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
+        logging.info("Exit")
 
     def jar(self, cmd_input_args):
         """
@@ -378,24 +460,34 @@ class VanillaServerRunner:
         `VanillaServerRunnerObject.jar(["copy", "1.15.2"])`\n
         Returns boolean if it was successful.
         """
+        logging.info("Entry")
         # Turn into list for easier processing
         if isinstance(cmd_input_args, str):
+            logging.info("Turning input from string into list.")
             cmd_input_args = cmd_input_args.split(" ")
             if len(cmd_input_args) < 2:
                 print(cmd_input_args)
+                logging.info("Exit")
                 return False
             cmd_input_args = cmd_input_args[1::]
         # Check if passed in list is valid
         elif isinstance(cmd_input_args, list):
             if len(cmd_input_args) < 2:
+                logging.info("Exit")
                 return False
         # Didn't pass in valid object
         else:
+            logging.error("Didn't pass in valid object.")
+            logging.info("Exit")
             return False
+
+        logging.debug("cmd_input_args: %s", cmd_input_args)
 
         # Check first argument if it's a valid command type
         valid_commands = ["set", "download", "update"]
         if not cmd_input_args[0] in valid_commands:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
         
         # Check command type, pass off to function
@@ -406,42 +498,54 @@ class VanillaServerRunner:
         elif cmd_input_args[0] == "update":
             return self.__jar_update()
         else:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
+        logging.info("Exit")
 
     def launch_options(self, cmd_input_args):
         """
         Handles running Launch Option functions and commands from terminal.
         """
+        logging.info("Entry")
         # Turn into list for easier processing
         if isinstance(cmd_input_args, str):
+            logging.info("Turning input from string into list.")
             cmd_input_args = cmd_input_args.split(" ")
             if len(cmd_input_args) < 2:
-                print(cmd_input_args)
+                logging.info("Exit")
                 return False
             cmd_input_args = cmd_input_args[1::]
         # Check if passed in list is valid
         elif isinstance(cmd_input_args, list):
             if len(cmd_input_args) < 4:
+                logging.info("Exit")
                 return False
         # Didn't pass in valid object
         else:
+            logging.error("Didn't pass in valid object.")
+            logging.info("Exit")
             return False
+
+        logging.debug("cmd_input_args: %s", cmd_input_args)
 
         # Check first argument if it's a valid command type
         valid_commands = ["list", "add", "delete"]
         if not cmd_input_args[0] in valid_commands:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
         
         # Check if argument count matches each one
         if cmd_input_args[0] == "list" and len(cmd_input_args) == 1:
             self.LaunchOptionsHandler.read_options()
-            print("""%s\n%s\n%s\n%s""" % 
-                    (   self.LaunchOptionsHandler.java_section,
-                        self.LaunchOptionsHandler.java_options,
-                        self.LaunchOptionsHandler.game_section,
-                        self.LaunchOptionsHandler.game_options
-                    )
-                )
+            loh_str = "%s\n%s\n%s\n%s" %    (  self.LaunchOptionsHandler.java_section, 
+                                                self.LaunchOptionsHandler.java_options, 
+                                                self.LaunchOptionsHandler.game_section, 
+                                                self.LaunchOptionsHandler.game_options
+                                            )
+            logging.debug("Launch Options Handler String: %s", loh_str)
+            print(loh_str)
         elif cmd_input_args[0] == "add" and len(cmd_input_args) == 3:
             option = cmd_input_args[1]
             is_java_option = bool(cmd_input_args[2])
@@ -450,32 +554,44 @@ class VanillaServerRunner:
             option = cmd_input_args[1]
             self.LaunchOptionsHandler.delete_option(option)
         else:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
 
+        logging.info("Exit")
         return True
 
     def server_properties(self, cmd_input_args):
         """
         Handles running Server Properties functions and commands from terminal.
         """
+        logging.info("Entry")
         # Turn into list for easier processing
         if isinstance(cmd_input_args, str):
+            logging.info("Turning input from string into list.")
             cmd_input_args = cmd_input_args.split(" ")
             if len(cmd_input_args) < 2:
-                print(cmd_input_args)
+                logging.info("Exit")
                 return False
             cmd_input_args = cmd_input_args[1::]
         # Check if passed in list is valid
         elif isinstance(cmd_input_args, list):
             if len(cmd_input_args) < 4:
+                logging.info("Exit")
                 return False
         # Didn't pass in valid object
         else:
+            logging.error("Didn't pass in valid object.")
+            logging.info("Exit")
             return False
+
+        logging.debug("cmd_input_args: %s", cmd_input_args)
 
         # Check first argument if it's a valid command type
         valid_commands = ["list", "set", "get"]
         if not cmd_input_args[0] in valid_commands:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
 
         # Run each command
@@ -486,31 +602,42 @@ class VanillaServerRunner:
         elif cmd_input_args[0] == "get" and len(cmd_input_args) < 3:
             print(self.ServerPropertiesHandler.get_property(cmd_input_args[1]))
         else:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
+        logging.info("Exit")
         return True
 
     def whitelist(self, cmd_input_args):
         """
         Handles running Whitelist functions and commands from terminal.
         """
+        logging.info("Entry")
         # Turn into list for easier processing
         if isinstance(cmd_input_args, str):
+            logging.info("Turning input from string into list.")
             cmd_input_args = cmd_input_args.split(" ")
             if len(cmd_input_args) < 2:
-                print(cmd_input_args)
+                logging.info("Exit")
                 return False
             cmd_input_args = cmd_input_args[1::]
         # Check if passed in list is valid
         elif isinstance(cmd_input_args, list):
             if len(cmd_input_args) < 4:
+                logging.info("Exit")
                 return False
         # Didn't pass in valid object
         else:
+            logging.error("Didn't pass in valid object.")
+            logging.info("Exit")
             return False
+
+        logging.debug("cmd_input_args: %s", cmd_input_args)
 
         # Check first argument if it's a valid command type
         valid_commands = ["get", "add", "delete"]
         if not cmd_input_args[0] in valid_commands:
+            logging.info("Exit")
             return False
 
         # Run commands
@@ -520,21 +647,28 @@ class VanillaServerRunner:
             elif cmd_input_args[1] == "ids":
                 print(self.WhitelistHandler.get_players_uuids())
             else:
+                logging.error("Didn't pass in valid command type for get.")
+                logging.info("Exit")
                 return False
         elif cmd_input_args[0] == "add" and len(cmd_input_args) == 2:
             self.WhitelistHandler.add_player(cmd_input_args[1])
         elif cmd_input_args[0] == "remove" and len(cmd_input_args) == 2:
             self.WhitelistHandler.remove_player(cmd_input_args[1])
         else:
+            logging.warning("Valid command type not passed in.")
+            logging.info("Exit")
             return False
         
+        logging.info("Exit")
         return True
 
     def __backup_as_zip(self, archive_path):
         """
         Backs up Server folder into a ZIP archive using LZMA compression.
         """
+        logging.info("Entry")
         server_zip = ZipFile(archive_path, "w", ZIP_LZMA)
+        logging.info("Zip file created. Backing up server files.")
         print(colored("Zip file created. Backing up server files.", "green"))
         os.chdir(self.server_dir)
         for folder_name, subfolders, file_names in os.walk(self.server_dir):
@@ -543,14 +677,19 @@ class VanillaServerRunner:
                 file_path = os.path.join(folder_name, file_name)
                 # Add file to zip
                 server_zip.write(file_path)
+                logging.debug("Wrote %s.", str(file_name))
+        logging.info("Exit")
 
     def __backup_as_tar(self, archive_path):
         """
         Backs up Server folder into a compressed tar file.
         """
+        logging.info("Entry")
+        logging.info("Creating and compressing tar file.")
         print(colored("Creating and compressing tar file.", "green"))
         with tarfile.open(archive_path, "w:gz") as tar:
             tar.add(".", arcname=os.path.basename(self.server_dir))
+        logging.info("Exit")
 
     def __jar_set(self, jar):
         """
@@ -563,9 +702,11 @@ class VanillaServerRunner:
         `jar set 1.15.2`\n
         Returns boolean if it was successful.
         """
+        logging.info("Entry")
         # Check if file exists
         jar_path = os.path.join(self.server_jars, jar + ".jar")
         if not os.path.isfile(jar_path):
+            logging.info("Exit")
             return False
 
         # Remove all .jar files in server directory
@@ -573,17 +714,22 @@ class VanillaServerRunner:
         for s_d_file in server_dir_files:
             if s_d_file.endswith(".jar"):
                 os.remove(os.path.join(self.server_dir, s_d_file))
+                logging.debug("Removed %s.", s_d_file)
+        logging.info("Removed all .jars from server folder.")
 
         # Copy file to server directory
         to_copy_path = os.path.join(self.server_dir, jar + ".jar")
         try:
             copy(jar_path, to_copy_path)
+            logging.info("Copied version to path.")
         except Exception as e:
-            print(e)
+            logging.error("Could not copy file to server directory. %s", str(e))
+            logging.info("Exit")
             return False
        
         # Set server jar 
         self.server_jar_filename = to_copy_path
+        logging.info("Exit")
         return True        
 
     def __jar_download(self, version):
@@ -593,7 +739,9 @@ class VanillaServerRunner:
         `jar download 1.15.2`\n
         Returns boolean if it was successful.
         """
+        logging.info("Entry")
         success = self.VanillaServerDownloader.download_server_jar(version)
+        logging.info("Exit")
         return success
 
     def __jar_update(self):
@@ -603,26 +751,37 @@ class VanillaServerRunner:
         `jar update`\n
         Returns boolean if it was successful.
         """
+        logging.info("Entry")
         success = self.VanillaServerDownloader.parse_mojang_download_links()
+        logging.info("Exit")
         return success
 
     def __enable_eula(self):
         """
         Enables eula in eula.txt.
         """
+        logging.info("Entry")
         # Check if it exists
         eula_path = os.path.join(self.server_dir, "eula.txt")
         if not os.path.isfile(eula_path):
             # Create eula.txt
             try:
+                logging.info("Creating eula with \"eula=true\".")
                 open(eula_path, "w").write("eula=true")
+                logging.info("Exit")
                 return True
             except Exception as e:
+                logging.error("Could not create eula. %s", str(e))
+                logging.info("Exit")
                 return False
 
         # If it does exist, just write eula=true
         try:
+            logging.info("Writing to eula with \"eula=true\".")
             open(eula_path, "w").write("eula=true")
+            logging.info("Exit")
             return True
         except Exception as e:
+            logging.error("Could not write to eula. %s", str(e))
+            logging.info("Exit")
             return False
