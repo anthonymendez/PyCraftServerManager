@@ -678,6 +678,7 @@ class VanillaServerRunner:
                 # Add file to zip
                 server_zip.write(file_path)
                 logging.debug("Wrote %s.", str(file_name))
+        os.chdir(self.main_directory)
         logging.info("Exit")
 
     def __backup_as_tar(self, archive_path):
@@ -688,7 +689,7 @@ class VanillaServerRunner:
         logging.info("Creating and compressing tar file.")
         print(colored("Creating and compressing tar file.", "green"))
         with tarfile.open(archive_path, "w:gz") as tar:
-            tar.add(".", arcname=os.path.basename(self.server_dir))
+            tar.add(self.server_dir, arcname=os.path.basename(self.server_dir))
         logging.info("Exit")
 
     def __jar_set(self, jar):
