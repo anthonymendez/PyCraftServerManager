@@ -652,7 +652,7 @@ class VanillaServerRunner:
                 return False
         elif cmd_input_args[0] == "add" and len(cmd_input_args) == 2:
             self.WhitelistHandler.add_player(cmd_input_args[1])
-        elif cmd_input_args[0] == "remove" and len(cmd_input_args) == 2:
+        elif cmd_input_args[0] == "delete" and len(cmd_input_args) == 2:
             self.WhitelistHandler.remove_player(cmd_input_args[1])
         else:
             logging.warning("Valid command type not passed in.")
