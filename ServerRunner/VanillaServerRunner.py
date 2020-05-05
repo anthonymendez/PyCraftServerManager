@@ -44,7 +44,7 @@ class VanillaServerRunner:
         logging.basicConfig(format="%(asctime)s - %(filename)s - %(name)s - %(levelname)s - %(message)s", 
                             filename=("pycraft_%s.log" % time_now), 
                             level=logging.DEBUG)
-        logging.info("VanillaServerRunner Entry")
+        logging.debug("VanillaServerRunner Entry")
         # Server running variables
         self.server_process = None
         self.input_thread = None
