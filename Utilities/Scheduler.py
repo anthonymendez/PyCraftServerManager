@@ -17,8 +17,6 @@ class Scheduler():
     Scheduler class handles running commands at regular intervals.
     """
 
-    list_file_name = "scheduler.list"
-
     def __init__(self, main_directory, server_directory, input_handler):
         """
         Initializes Scheduler for server by:\n
@@ -31,19 +29,11 @@ class Scheduler():
         self.main_directory = main_directory
         self.server_directory = server_directory
         self.input_handler = input_handler
-        self.list_file_path = os.path.join(self.main_directory, self.list_file_name)
         self.sched = BackgroundScheduler()
         jobstore = DiskJobStore()
         self.sched.add_jobstore(jobstore)
         self.sched.start()
         self.job_count = 0
-        # Create scheduler.list file if it doesn't exist and create headers for it
-        if not os.path.exists(self.list_file_path):
-            logging.info("Creating scheduler file.")
-            list_file = open(self.list_file_path, 'w')
-            list_file.write("")
-            list_file.close()
-            logging.info("Created scheduler file.")
         logging.info("Exit")
     
     def add_scheduled_function(self, function, function_args, cron_string):
@@ -121,7 +111,6 @@ class Scheduler():
             self.sched.add_job(function, trigger=ct, args=[function_args], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
-            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
@@ -204,11 +193,10 @@ class Scheduler():
             self.sched.add_job(self.input_handler, trigger=ct, args=[command], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
-            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
-            logging.warning("Something went wrong with scheduling command. %s", str(e))
+            logging.exception("Something went wrong with scheduling command. %s. %s", str(e))
             logging.info("Exit")
             return False
 
@@ -220,7 +208,6 @@ class Scheduler():
         try:
             self.sched.remove_job(job_id)
             logging.info("Removed job %s", str(job_id))
-            self.__save()
             logging.info("Exit")
             return True
         except Exception as e:
@@ -249,19 +236,3 @@ class Scheduler():
             logging.warning("Something went wrong with listing commands. %s", str(e))
             logging.info("Exit")
             return False
-
-    def __load(self):
-        """
-        Load instance of background scheduler from scheduler.list.
-        """
-        logging.info("Entry")
-        pass
-        logging.info("Exit")
-
-    def __save(self):
-        """
-        Save (and overwrite) current instance of background scheduler to scheduler.list.
-        """
-        logging.info("Entry")
-        pass
-        logging.info("Exit")
