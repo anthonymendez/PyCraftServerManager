@@ -30,11 +30,14 @@ class VanillaServerDownloader():
         """
         logging.info("Entry")
         try:
+            logging.info("Mojang Download Link scraping starting.")
             # Clear versions list and download links dictionary
             self.versions.clear()
             self.download_links.clear()
             # Get each page for a Minecraft version
+            logging.info("Getting hosting site.")
             response = requests.get(self.site)
+            logging.info("Got hosting site.")
             soup = BeautifulSoup(response.text, "html.parser")
             div_container = soup.find_all(attrs={"class": "versions"})
             soup = BeautifulSoup(str(div_container), "html.parser")
@@ -42,6 +45,8 @@ class VanillaServerDownloader():
             download_pages = []
             for a in a_container:
                 download_pages.append(self.site + a["href"])
+
+            logging.info("Page download links scraped.")
 
             # Get download link from each page
             thread_q = []
@@ -55,6 +60,8 @@ class VanillaServerDownloader():
                     self.versions.append(page[32::])
                     self.download_links.update({page[32::]: a_container[0]["href"]})
 
+            logging.info("Getting links from each page.")
+
             # Start a thread for each page to get the Mojang server jar download link 
             for i, page in enumerate(download_pages):
                 dp = Thread(target=get_page_download_links, args=[page])
@@ -65,6 +72,8 @@ class VanillaServerDownloader():
             for t in thread_q:
                 t.join()
             thread_q.clear()
+
+            logging.info("Done getting links from each page. Mojang Download Link scraping done.")
             logging.info("Exit")
             return True
         except Exception as e:
@@ -79,16 +88,21 @@ class VanillaServerDownloader():
         logging.info("Entry")
         try:
             if not os.path.exists(self.server_jars):
+                logging.info("Created server jars directory.")
                 os.mkdir(self.server_jars)
             if len(self.download_links) == 0:
                 if not self.parse_mojang_download_links():
+                    logging.info("Exit")
                     return False
             link = self.download_links.get(version)
+            logging.info("Downloading %s.jar.", str(version))
             file = requests.get(link)
+            logging.info("Downloaded %s.jar. Writing.", str(version))
             open(os.path.join(self.server_jars, str(version) + ".jar"), "wb").write(file.content)
+            logging.info("Wrote %s.jar.", str(version))
             logging.info("Exit")
             return True
         except Exception as e:
-            logging.error("Download of jar %s failed:\n\t%s", str(version), str(e))
+            logging.error("Download of %s.jar failed:\n\t%s", str(version), str(e))
             logging.info("Exit")
             return False
