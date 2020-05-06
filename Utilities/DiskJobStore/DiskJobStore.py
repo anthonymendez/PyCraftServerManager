@@ -2,7 +2,24 @@ import pickle
 import os
 
 from threading import Lock
+from apscheduler.util import datetime_to_utc_timestamp
+from apscheduler.job import Job
 from apscheduler.jobstores.memory import MemoryJobStore
+
+class Job_t():
+    """
+    Serializable form of a job.
+    """
+
+    def __init__(self, job, pickle_protocol=pickle.HIGHEST_PROTOCOL):
+        super().__init__()
+
+        if not isinstance(job, Job):
+            raise ValueError("job not of type Job.")
+
+        self.job_id = job.id
+        self.next_run_time = datetime_to_utc_timestamp(job.next_run_time)
+        self.job_state = job.__getstate__()
 
 class DiskJobStore(MemoryJobStore):
     """
@@ -17,6 +34,7 @@ class DiskJobStore(MemoryJobStore):
         self.disk_dir = disk_dir
         self.jobs_file_path = os.path.join(self.disk_dir, jobs_file_name)
         self.jobs_index_file_path = os.path.join(self.disk_dir, jobs_index_file)
+        self._jobs_t = []
         self.disk_lock = Lock()
         self.pickle_protocol = pickle_protocol
         # Create directory if it has not been created.
@@ -69,6 +87,7 @@ class DiskJobStore(MemoryJobStore):
 
         Store in memory and in the disk.
         """
+        self._jobs_t.append(Job_t(job))
         super_value = super().add_job(job)
         self._save_to_disk()
         return super_value
@@ -80,6 +99,19 @@ class DiskJobStore(MemoryJobStore):
         Store in memory and in the disk.
         """
         super_value = super().update_job(job)
+
+        updated = False
+        for job_t in self._jobs_t:
+            if job_t.id == job.id:
+                self._jobs_t.remove(job_t)
+                job_t = Job_t(job)
+                self._jobs_t.append(job_t)
+                updated = True
+                break
+
+        if not updated:
+            self._jobs_t.append(Job_t(job))
+
         self._save_to_disk()
         return super_value
 
@@ -90,6 +122,9 @@ class DiskJobStore(MemoryJobStore):
         Removes from memory and from disk.
         """
         super_value = super().remove_job(job_id)
+        for job_t in self._jobs_t:
+            if job_t.id == job_id:
+                self._jobs_t.remove(job_t)
         self._save_to_disk()
         return super_value
 
@@ -100,6 +135,7 @@ class DiskJobStore(MemoryJobStore):
         Removes from memory and from disk.
         """
         super_value = super().remove_all_jobs()
+        self._jobs_t.clear()
         self._save_to_disk()
         return super_value
 
@@ -122,12 +158,12 @@ class DiskJobStore(MemoryJobStore):
             # Create file if it has not been created.
             if not os.path.exists(self.jobs_file_path):
                 with open(file=self.jobs_file_path, mode="wb") as new_file:
-                    pickle.dump([], new_file, protocol=self.pickle_protocol)
+                    pickle.dump([], file=new_file, protocol=self.pickle_protocol)
             # If file does exist, load values from it.
             else:
                 try:
                     with open(file=self.jobs_file_path, mode="rb") as disk_file:
-                        self._jobs = pickle.load(file=disk_file, protocol=self.pickle_protocol)
+                        self._jobs_t = pickle.load(file=disk_file, protocol=self.pickle_protocol)
                 except EOFError as e:
                     self._logger.debug("End of file error. Doing nothing.")
                 except Exception as e:
@@ -136,7 +172,7 @@ class DiskJobStore(MemoryJobStore):
             # Create file if it has not been created.
             if not os.path.exists(self.jobs_index_file_path):
                 with open(file=self.jobs_index_file_path, mode="wb") as new_file:
-                    pickle.dump([], new_file, protocol=self.pickle_protocol)
+                    pickle.dump([], file=new_file, protocol=self.pickle_protocol)
             # If file does exist, load values from it.
             else:
                 try:
@@ -154,5 +190,5 @@ class DiskJobStore(MemoryJobStore):
         Saves `self._jobs_index` to `self.jobs_index_file_path` file.
         """
         with self.disk_lock:
-            pickle.dump(self._jobs, open(file=self.jobs_file_path, mode="wb"), protocol=self.pickle_protocol)
+            pickle.dump(self._jobs_t, open(file=self.jobs_file_path, mode="wb"), protocol=self.pickle_protocol)
             pickle.dump(self._jobs_index, open(file=self.jobs_index_file_path, mode="wb"), protocol=self.pickle_protocol)
