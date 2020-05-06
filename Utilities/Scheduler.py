@@ -108,7 +108,7 @@ class Scheduler():
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
-            self.sched.add_job(function, trigger=ct, args=[function_args], id=str(self.job_count))
+            self.sched.add_job(self.__run_function, trigger=ct, executor="processpool", args=[function, function_args], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
             logging.info("Exit")
@@ -190,7 +190,7 @@ class Scheduler():
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
-            self.sched.add_job(self.input_handler, trigger=ct, args=[command], id=str(self.job_count))
+            self.sched.add_job(self.__run_function, trigger=ct, executor="processpool", args=[self.input_handler, command], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
             logging.info("Exit")
@@ -236,3 +236,14 @@ class Scheduler():
             logging.warning("Something went wrong with listing commands. %s", str(e))
             logging.info("Exit")
             return False
+
+    def __run_function(self, function, args):
+        """
+        Handles running given function with input arguments.
+        """
+        logging.info("Entry")
+        try:
+            function(args=args)
+        except Exception as e:
+            logging.error(e)
+        logging.info("Exit")
