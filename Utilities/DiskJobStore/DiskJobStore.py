@@ -44,7 +44,6 @@ class DiskJobStore(MemoryJobStore):
         # Load from jobs and jobs_index from disk.
         self._load_from_disk()
 
-
     def lookup_job(self, job_id):
         """
         Look up stored job.
@@ -123,7 +122,7 @@ class DiskJobStore(MemoryJobStore):
         """
         super_value = super().remove_job(job_id)
         for job_t in self._jobs_t:
-            if job_t.id == job_id:
+            if job_t.job_id == job_id:
                 self._jobs_t.remove(job_t)
         self._save_to_disk()
         return super_value
@@ -164,20 +163,10 @@ class DiskJobStore(MemoryJobStore):
                 try:
                     with open(file=self.jobs_file_path, mode="rb") as disk_file:
                         self._jobs_t = pickle.load(file=disk_file, protocol=self.pickle_protocol)
-                except EOFError as e:
-                    self._logger.debug("End of file error. Doing nothing.")
-                except Exception as e:
-                    self._logger.exception("Couldn't load self._jobs.")
 
-            # Create file if it has not been created.
-            if not os.path.exists(self.jobs_index_file_path):
-                with open(file=self.jobs_index_file_path, mode="wb") as new_file:
-                    pickle.dump([], file=new_file, protocol=self.pickle_protocol)
-            # If file does exist, load values from it.
-            else:
-                try:
-                    with open(file=self.jobs_index_file_path, mode="rb") as disk_file:
-                        self._jobs_index = pickle.load(file=disk_file, protocol=self.pickle_protocol)
+                    for job_t in self._jobs_t:
+                        new_job = Job(self._scheduler)
+                        new_job.__setstate__(job_t.job_state)
                 except EOFError as e:
                     self._logger.debug("End of file error. Doing nothing.")
                 except Exception as e:
@@ -191,4 +180,3 @@ class DiskJobStore(MemoryJobStore):
         """
         with self.disk_lock:
             pickle.dump(self._jobs_t, open(file=self.jobs_file_path, mode="wb"), protocol=self.pickle_protocol)
-            pickle.dump(self._jobs_index, open(file=self.jobs_index_file_path, mode="wb"), protocol=self.pickle_protocol)
