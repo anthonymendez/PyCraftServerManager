@@ -12,12 +12,14 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
 from Utilities.DiskJobStore.DiskJobStore import DiskJobStore
 
+server_runner_ = None
+
 class Scheduler():
     """
     Scheduler class handles running commands at regular intervals.
     """
 
-    def __init__(self, main_directory, server_directory, input_handler):
+    def __init__(self, main_directory, server_directory, input_handler, server_runner):
         """
         Initializes Scheduler for server by:\n
         \tTying it to a Server Directory.\n
@@ -30,7 +32,9 @@ class Scheduler():
         self.server_directory = server_directory
         self.input_handler = input_handler
         self.sched = BackgroundScheduler()
-        jobstore = DiskJobStore()
+        global server_runner_
+        server_runner_ = server_runner
+        jobstore = DiskJobStore(server_runner=server_runner_)
         self.sched.add_jobstore(jobstore)
         self.sched.start()
         self.job_count = 0
@@ -108,7 +112,7 @@ class Scheduler():
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
-            self.sched.add_job(self.__run_function, trigger=ct, executor="processpool", args=[function, function_args], id=str(self.job_count))
+            self.sched.add_job(run_function, trigger=ct, args=[function, function_args], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
             logging.info("Exit")
@@ -127,7 +131,7 @@ class Scheduler():
         logging.info("Entry")
         # Check for empty strings
         if command == None or len(command) == 0 or cron_string == None or len(cron_string) == 0:
-            logging.error("None or Empty strings present in arguments.")
+            logging.error("None arguments or Empty strings present in arguments.")
             logging.info("Exit")
             return False
 
@@ -190,7 +194,7 @@ class Scheduler():
                             day_of_week=day_of_week, hour=hour, minute=minute, 
                             second=second, start_date=start_date, end_date=end_date, 
                             timezone=timezone, jitter=jitter)
-            self.sched.add_job(self.__run_function, trigger=ct, executor="processpool", args=[self.input_handler, command], id=str(self.job_count))
+            self.sched.add_job(run_function, trigger=ct, args=[self.input_handler, command], id=str(self.job_count))
             self.job_count += 1
             logging.info("Scheduled new command.")
             logging.info("Exit")
@@ -237,13 +241,13 @@ class Scheduler():
             logging.info("Exit")
             return False
 
-    def __run_function(self, function, args):
-        """
-        Handles running given function with input arguments.
-        """
-        logging.info("Entry")
-        try:
-            function(args=args)
-        except Exception as e:
-            logging.error(e)
-        logging.info("Exit")
+def run_function(function, args):
+    """
+    Handles running given function with input arguments.
+    """
+    logging.info("Entry")
+    try:
+        function(server_runner_, args)
+    except Exception as e:
+        logging.error(e)
+    logging.info("Exit")

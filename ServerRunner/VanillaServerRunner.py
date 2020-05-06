@@ -86,7 +86,7 @@ class VanillaServerRunner:
         # Launch Options Handler
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_directory, self.server_dir)
         # Scheduler Class
-        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler)
+        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler, self)
         # Enable Eula
         self.__enable_eula()
         # Start up input thread
@@ -228,24 +228,26 @@ class VanillaServerRunner:
                 logging.warning("Command not recognized.")
                 print(colored("Command not recognized.", "red"))
 
+    @staticmethod
     def __input_handler(self, cmd_input):
         """
         Handles input given by input thread/command line or a scheduled command
         """
         logging.info("Entry")
         logging.info("cmd_input: %s", str(cmd_input))
-        # Empty Input
-        if len(cmd_input) == 0:
-            logging.error("__input_handler given empty input. Not valid.")
-            logging.info("Exit")
-            return
+        if self.input_thread.isAlive():
+            # Empty Input
+            if len(cmd_input) == 0:
+                logging.error("__input_handler given empty input. Not valid.")
+                logging.info("Exit")
+                return
 
-        # Command to be sent to the server.jar
-        if cmd_input[0] == '/':
-            self.__minecraft_input_handler(cmd_input)
-        # Command to be handled by ServerRunner
-        else:
-            self.__pycraft_input_handler(cmd_input)
+            # Command to be sent to the server.jar
+            if cmd_input[0] == '/':
+                self.__minecraft_input_handler(cmd_input)
+            # Command to be handled by ServerRunner
+            else:
+                self.__pycraft_input_handler(cmd_input)
 
         logging.info("Exit")
 
@@ -265,7 +267,7 @@ class VanillaServerRunner:
             if isinstance(cmd_input, str):
                 logging.info("Passing user input to input handler")
                 cmd_input = cmd_input.strip()
-                self.__input_handler(cmd_input)
+                self.__input_handler(self, cmd_input)
             else:
                 logging.error("User input is not string. Stopping server process and terminating.")
                 self.server_process.sendline("stop".encode("utf-8"))
