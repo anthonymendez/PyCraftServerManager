@@ -78,19 +78,52 @@ class InputHandler():
                 is_input_queue_empty = len(self.__input_queue) == 0
             
             # Get input at beginning of list and update is_empty bool
-            input_current = self.__input_queue.pop(0)
+            command = self.__input_queue.pop(0)
             is_input_queue_empty = len(self.__input_queue) == 0
-            logging.info("Handling \"%s\"", input_current)
+            logging.info("Handling \"%s\"", command)
 
-            is_minecraft_command = input_current[0] == '/'
-            is_specify_server = input_current[0:2] == "id" or input_current[0:4] == "name"
+            is_minecraft_command = command[0] == '/'
+            is_specify_server = command[0:2] == "id" or command[0:4] == "name"
             # Check command type
             if is_minecraft_command:
                 # Minecraft Command
                 pass
             elif is_specify_server:
                 # Specifys server to run command on
-                pass
+                command_list = command.split(" ")
+                specifier = None
+                is_name = "name" == command_list[0:4]
+                is_id = "id" in command_list[0:2]
+                if "=" in command_list[0]:
+                    specifier = command_list[0].split("=")[1]
+                    real_command = " ".join(command_list[1::])
+                elif "=" in command_list[1]:
+                    specifier = command_list[2]
+                    real_command = " ".join(command_list[3::])
+                else:
+                    logging.error("Invalid specify server command.")
+                    continue
+
+                # Get serverrunner based on name or id
+                server_runner = None
+                if is_name:
+                    # TODO: Search by server name
+                    pass
+                elif is_id:
+                    # TODO: Search by server id
+                    pass
+                else:
+                    # TODO: Error out, invalid specify server command
+                    pass
+
+                # TODO: Select server as current temporary server
+                if server_runner is None:
+                    logging.error("Server Runner not found.")
+                    continue
+
+                # TODO: Prepend list with command string
+                self.__input_queue.insert(0, real_command)
+                is_input_queue_empty = len(self.__input_queue) == 0 
             else:
                 # PyCraftServerManager command
                 pass
