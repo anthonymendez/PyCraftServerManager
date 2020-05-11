@@ -1,4 +1,4 @@
-from ServerRunner.VanillaServerRunner import VanillaServerRunner
+from PyCraftServerManager.ServerRunner.VanillaServerRunner import VanillaServerRunner
 
 # Server Runner
 ServerRunner = VanillaServerRunner("../Vanilla_Server_Basic/")

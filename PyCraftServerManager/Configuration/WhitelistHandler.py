@@ -1,4 +1,4 @@
-from Utilities.MojangAPI import player_to_uuid
+from ..Utilities.MojangAPI import player_to_uuid
 import os
 import json
 

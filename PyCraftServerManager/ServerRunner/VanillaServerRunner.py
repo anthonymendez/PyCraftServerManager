@@ -15,11 +15,11 @@ from pexpect import popen_spawn
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
 from datetime import datetime
 from shutil import copy
-from Configuration.WhitelistHandler import WhitelistHandler
-from Configuration.ServerPropertiesHandler import ServerPropertiesHandler
-from Configuration.LaunchOptionsHandler import LaunchOptionsHandler
-from Utilities.Scheduler import Scheduler
-from ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
+from ..Configuration.WhitelistHandler import WhitelistHandler
+from ..Configuration.ServerPropertiesHandler import ServerPropertiesHandler
+from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
+from ..Utilities.Scheduler import Scheduler
+from ..ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
 
 if is_windows():
     import colorama
