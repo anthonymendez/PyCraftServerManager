@@ -71,6 +71,28 @@ class InputHandler():
         """
         logging.info("Entry")
 
-        while not self.stopped:
+        is_input_queue_empty = len(self.__input_queue) == 0
+        while not self.stopped or is_input_queue_empty:
+            # Wait for input queue to not be empty
+            while is_input_queue_empty:
+                is_input_queue_empty = len(self.__input_queue) == 0
+            
+            # Get input at beginning of list and update is_empty bool
+            input_current = self.__input_queue.pop(0)
+            is_input_queue_empty = len(self.__input_queue) == 0
+            logging.info("Handling \"%s\"", input_current)
+
+            is_minecraft_command = input_current[0] == '/'
+            is_specify_server = input_current[0:2] == "id" or input_current[0:4] == "name"
+            # Check command type
+            if is_minecraft_command:
+                # Minecraft Command
+                pass
+            elif is_specify_server:
+                # Specifys server to run command on
+                pass
+            else:
+                # PyCraftServerManager command
+                pass
 
         logging.info("Exit")
