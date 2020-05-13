@@ -200,7 +200,7 @@ class Scheduler():
             logging.info("Exit")
             return True
         except Exception as e:
-            logging.exception("Something went wrong with scheduling command. %s. %s", str(e))
+            logging.exception("Something went wrong with scheduling command. %s.", str(e))
             logging.info("Exit")
             return False
 
