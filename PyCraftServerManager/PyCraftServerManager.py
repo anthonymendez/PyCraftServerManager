@@ -26,6 +26,8 @@ if is_windows():
 stopping_all = True
 cmd_input_queue = []
 
+input_queue_lock = Lock()
+
 def init():
     """
     Starts PyCraftServerManager input thread.
@@ -61,7 +63,8 @@ def push_to_input_queue(cmd_input):
     Returns bool on success.
     """
     if not stopping_all:
-        cmd_input_queue.append(cmd_input)
+        with input_queue_lock:
+            cmd_input_queue.append(cmd_input)
         return True
     else:
         return False
@@ -73,6 +76,12 @@ def input_handler_thread():
     Only exits when `exit` command is sent and input queue is empty.
     """
     while not stopping_all or not len(cmd_input_queue) == 0:
+        # Remove first item off the queue
+        cmd_input = None
+        with input_queue_lock:
+            cmd_input = cmd_input_queue.pop(0)
+
+        # TODO: Do something with it
         pass
 
 def exit():
