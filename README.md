@@ -26,7 +26,7 @@ Note: When I say `terminal` or `command line`, I mean feature is accessible thro
 
 * Download Spigot, Paper, Forge, SpongeVanilla, and Fabric Minecraft Server Jars
 
-* Launch applciation through a single executable
+* Launch application through a single executable
 
 # Required
 
