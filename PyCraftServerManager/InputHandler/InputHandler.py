@@ -1,6 +1,7 @@
 import os
 import re
 
+from threading import Thread, Lock
 from termcolor import colored
 from ..Utilities.Singleton import Singleton
 from ..Utilities.Scheduler import Scheduler
@@ -48,7 +49,11 @@ class InputHandler():
         # Scheduler Class TODO: Redo class for InputHandler
         self.Scheduler = Scheduler(self.main_directory, None, self.__push_to_input_queue, self)
         # TODO: Create thread for user input
+        self.user_input_thread = Thread(target=self.__user_input_loop)
+        self.user_input_thread.start()
         # TODO: Create thread to handle input queue
+        self.input_loop_thread = Thread(target=self.__input_loop)
+        self.input_loop_thread.start()
         logging.info("Exit")
 
     def __push_to_input_queue(self, input_to_handle):
@@ -90,6 +95,8 @@ class InputHandler():
             logging.debug("Appending user input to input queue.")
             cmd_input = cmd_input.strip()
             self.__push_to_input_queue(cmd_input)
+            if cmd_input == "exit":
+                break
 
         logging.info("Exit")
 
@@ -100,7 +107,7 @@ class InputHandler():
         logging.info("Entry")
 
         is_input_queue_empty = len(self.__input_queue) == 0
-        while not self.stopped or is_input_queue_empty:
+        while not self.stopped or not is_input_queue_empty:
             # Wait for input queue to not be empty
             while is_input_queue_empty:
                 is_input_queue_empty = len(self.__input_queue) == 0
@@ -108,6 +115,7 @@ class InputHandler():
             # Get input at beginning of list and update is_empty bool
             command = self.__input_queue.pop(0)
             is_input_queue_empty = len(self.__input_queue) == 0
+            print(is_input_queue_empty)
             logging.info("Handling \"%s\"", command)
 
             is_minecraft_command = command[0] == '/'
@@ -217,6 +225,7 @@ class InputHandler():
         Stops server if it's running and quits program.
         """
         logging.info("Entry")
+        self.stopped = True
         # TODO: Stop all running servers
         logging.info("Exit")
 
