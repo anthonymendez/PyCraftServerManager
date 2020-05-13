@@ -1,4 +1,16 @@
+import os
+import re
+
+from termcolor import colored
 from ..Utilities.Singleton import Singleton
+
+# TODO Move to it's own module possibly
+def is_windows():
+    return os.name == "nt"
+
+if is_windows():
+    import colorama
+    colorama.init()
 
 import logging as log
 logging = log.getLogger(__name__)
@@ -21,8 +33,19 @@ class InputHandler():
         self.__input_queue = []
         self.default_server_runner = None
         self.temp_server_runner = None
+        # Lookup dictionaries for server runners by names
         self.name_to_server = {}
         self.id_to_server = {}
+        # Set main directory of python project
+        self.main_directory = os.getcwd()
+        # Set up commands array
+        self.commands_functions_dict = {
+            # Terminal Command: (fn pointer, argument count)
+            "exit": (self.exit, 0),
+            "schedule": (self.schedule, -1)
+        }
+        # Scheduler Class TODO: Redo class for InputHandler
+        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__push_to_input_queue, self)
         # TODO: Create thread for user input
         # TODO: Create thread to handle input queue
         logging.info("Exit")
@@ -160,4 +183,67 @@ class InputHandler():
         """
         Handles command like a PyCrafty command.
         """
-        return False
+        command_args = command.split(" ")
+        # Check if this is an Input Handler command. If so, run.
+        if command_args[0] in self.commands_functions_dict:
+            function = self.commands_functions_dict.get(command_args[0])[0]
+            arg_count = self.commands_functions_dict.get(command_args[0])[1]
+            if arg_count == 0:
+                return function()
+            elif arg_count == -1:
+                return function(command)
+            elif arg_count == len(command_args) - 1:
+                return function(command_args[1::])
+        else:
+            succeded = self.temp_server_runner.pycraft_input_handler(command)
+            self.temp_server_runner = self.default_server_runner
+            return succeded
+
+    def exit(self):
+        """
+        Stops server if it's running and quits program.
+        """
+        logging.info("Entry")
+        # TODO: Stop all running servers
+        logging.info("Exit")
+
+    def schedule(self, cmd_input_args):
+        logging.info("Entry")
+        # Check what type of schedule command it is
+        schedule_command_type = cmd_input_args.split(" ")[1]
+        # Add new scheduled command
+        if (schedule_command_type == "add"):
+            # Extract command and cron string
+            # https://stackoverflow.com/a/2076356/12464369
+            cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
+            command = cmd_inputs_args_quoted[0]
+            cron = cmd_inputs_args_quoted[1]
+            logging.debug("Command: %s", command)
+            logging.debug("Cron: %s", cron)
+            print(cmd_inputs_args_quoted)
+            # Create scheduled command
+            if (self.Scheduler.add_scheduled_command(command, cron)):
+                logging.info("Command successfully scheduled!")
+                print(colored("Command successfully scheduled!", "green"))
+            else:
+                logging.warning("Command not scheduled!")
+                print(colored("Command not scheduled!", "red"))
+        # List all scheduled commands
+        elif (schedule_command_type == "list"):
+            logging.info("Listing scheduled commands.")
+            if (not self.Scheduler.list_scheduled_commands()):
+                logging.error("Something went wrong listing scheduled jobs!")
+                print(colored("Something went wrong listing scheduled jobs!", "red"))
+        # Delete command
+        elif (schedule_command_type == "delete"):
+            logging.info("Deleting scheduled command.")
+            job_id = cmd_input_args.split(" ")[2]
+            logging.debug("job_id: %s", str(job_id))
+            if (not self.Scheduler.delete_scheduled_command(job_id)):
+                logging.error("Something went wrong deleting a scheduled job!")
+                print(colored("Something went wrong deleting a scheduled job!", "red"))
+        # Not a valid command
+        else:
+            logging.warning("%s is not a valid schedule command type.", schedule_command_type)
+            print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
+        logging.info("Exit")

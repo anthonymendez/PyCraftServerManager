@@ -69,9 +69,7 @@ class VanillaServerRunner:
             "stop": (self.stop, 0), 
             "restart": (self.restart, 0), 
             "backup": (self.backup, 1),
-            "exit": (self.exit, 0),
             "delete_user_cache": (self.delete_user_cache, 0),
-            "schedule": (self.schedule, -1),
             "jar": (self.jar, -1),
             "launch_options": (self.launch_options, -1),
             "server_properties": (self.server_properties, -1),
@@ -191,7 +189,7 @@ class VanillaServerRunner:
                 print(colored("Server has not been started! Start server with \"start\" to start the server!", "red"))
                 return False
 
-    def __pycraft_input_handler(self, cmd_input):
+    def pycraft_input_handler(self, cmd_input):
         """
         Handles input for launching PyCraftServerManager commands.
         """
@@ -359,16 +357,6 @@ class VanillaServerRunner:
             print(colored("Restart process done! Wait for server to start!", "green"))
         logging.info("Exit")
 
-    def exit(self):
-        """
-        Stops server if it's running and quits program.
-        """
-        logging.info("Entry")
-        self.stopping_all = True
-        if not self.server_process is None:
-            self.stop()
-        logging.info("Exit")
-
     def backup(self, cmd_input_args):
         """
         Backs up server folder into a tar or zip archive.\n
@@ -421,47 +409,6 @@ class VanillaServerRunner:
         else:
             logging.warning("Server is running. Cannot delete user cache.")
             print(colored("Server is running. Cannot delete user cache.", "red"))
-        logging.info("Exit")
-
-    def schedule(self, cmd_input_args):
-        logging.info("Entry")
-        # Check what type of schedule command it is
-        schedule_command_type = cmd_input_args.split(" ")[1]
-        # Add new scheduled command
-        if (schedule_command_type == "add"):
-            # Extract command and cron string
-            # https://stackoverflow.com/a/2076356/12464369
-            cmd_inputs_args_quoted = re.findall('"([^"]*)"', cmd_input_args)
-            command = cmd_inputs_args_quoted[0]
-            cron = cmd_inputs_args_quoted[1]
-            logging.debug("Command: %s", command)
-            logging.debug("Cron: %s", cron)
-            print(cmd_inputs_args_quoted)
-            # Create scheduled command
-            if (self.Scheduler.add_scheduled_command(command, cron)):
-                logging.info("Command successfully scheduled!")
-                print(colored("Command successfully scheduled!", "green"))
-            else:
-                logging.warning("Command not scheduled!")
-                print(colored("Command not scheduled!", "red"))
-        # List all scheduled commands
-        elif (schedule_command_type == "list"):
-            logging.info("Listing scheduled commands.")
-            if (not self.Scheduler.list_scheduled_commands()):
-                logging.error("Something went wrong listing scheduled jobs!")
-                print(colored("Something went wrong listing scheduled jobs!", "red"))
-        # Delete command
-        elif (schedule_command_type == "delete"):
-            logging.info("Deleting scheduled command.")
-            job_id = cmd_input_args.split(" ")[2]
-            logging.debug("job_id: %s", str(job_id))
-            if (not self.Scheduler.delete_scheduled_command(job_id)):
-                logging.error("Something went wrong deleting a scheduled job!")
-                print(colored("Something went wrong deleting a scheduled job!", "red"))
-        # Not a valid command
-        else:
-            logging.warning("%s is not a valid schedule command type.", schedule_command_type)
-            print(colored("%s is not a valid schedule command type." % (schedule_command_type), "red"))
         logging.info("Exit")
 
     def jar(self, cmd_input_args):
