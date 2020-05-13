@@ -86,11 +86,12 @@ class VanillaServerRunner:
         # Launch Options Handler
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_directory, self.server_dir)
         # Scheduler Class
-        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler)
+        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler, self)
         # Enable Eula
         self.__enable_eula()
         # Start up input thread
-        self.input_handler_lock = Lock()
+        self.minecraft_input_handler_lock = Lock()
+        self.pycraft_input_handler_lock = Lock()
         self.stopping_all = False
         self.input_thread = Thread(target=self.__input_loop)
         self.input_thread.start()
@@ -172,69 +173,81 @@ class VanillaServerRunner:
         print(colored("Output thread dead. Server officially stopped.", "green"))
         logging.info("Exit")
 
+    def __minecraft_input_handler(self, cmd_input):
+        """
+        Handles sending input to the Minecraft Server Process.
+        """
+        with self.minecraft_input_handler_lock:
+            logging.info("Command is a Minecraft Server command.")
+            if not self.server_process is None:
+                cmd_input_after_slash = cmd_input[1::]
+                logging.debug("Command after slash: %s", cmd_input_after_slash)
+                logging.info("Sending command to %s server... ", cmd_input_after_slash)
+                print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
+                self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
+            else:
+                logging.warning("Server has not been started! Start server with \"start\" to start the server!")
+                print(colored("Server has not been started! Start server with \"start\" to start the server!", "red"))
+
+    def __pycraft_input_handler(self, cmd_input):
+        """
+        Handles input for launching PyCraftServerManager commands.
+        """
+        with self.pycraft_input_handler_lock:
+            logging.info("Command is a PyCraftServerManager command.")
+            cmd_input_args = cmd_input.split(" ")
+            command = cmd_input_args[0]
+            if command in self.commands_functions_dict:
+                print(colored("Command \"%s\" received!" % cmd_input, "green"))
+                fn = self.commands_functions_dict.get(command)[0]
+                if fn is None:
+                    logging.warning("Command not programmed yet! Coming soon!")
+                    print(colored("Command not programmed yet! Coming soon!", "yellow"))
+                else:
+                    logging.debug("Given valid command.")
+                    args_required = self.commands_functions_dict.get(command)[1]
+                    if args_required == -1:
+                        fn_return = fn(cmd_input)
+                    elif args_required == 0:
+                        fn_return = fn()
+                    elif len(cmd_input_args) - 1 == args_required:
+                        fn_return = fn(cmd_input_args[1::])
+                    else:
+                        logging.warning("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required))
+                        print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+
+                    # Check what function returned if it did return anything
+                    if isinstance(fn_return, bool):
+                        if not fn_return:
+                            logging.warning("Command \"%s\" did not run successfully." % cmd_input)
+                            print(colored("Command \"%s\" did not run successfully." % cmd_input, "red"))
+                        else:
+                            logging.debug("Command \"%s\" ran successfully." % cmd_input)
+
+            else:
+                logging.warning("Command not recognized.")
+                print(colored("Command not recognized.", "red"))
+
+    @staticmethod
     def __input_handler(self, cmd_input):
         """
         Handles input given by input thread/command line or a scheduled command
         """
         logging.info("Entry")
         logging.info("cmd_input: %s", str(cmd_input))
-        # Empty Input
-        if len(cmd_input) == 0:
-            logging.error("__input_handler given empty input. Not valid.")
-            logging.info("Exit")
-            return
+        if self.input_thread.isAlive():
+            # Empty Input
+            if len(cmd_input) == 0:
+                logging.error("__input_handler given empty input. Not valid.")
+                logging.info("Exit")
+                return
 
-        # Lock function
-        # https://stackoverflow.com/a/10525433/12464369
-        with self.input_handler_lock:
-            logging.debug("Acquired input handler lock.")
             # Command to be sent to the server.jar
             if cmd_input[0] == '/':
-                logging.info("Command is a Minecraft Server command.")
-                if not self.server_process is None:
-                    cmd_input_after_slash = cmd_input[1::]
-                    logging.debug("Command after slash: %s", cmd_input_after_slash)
-                    logging.info("Sending command to %s server... ", cmd_input_after_slash)
-                    print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
-                    self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
-                else:
-                    logging.warning("Server has not been started! Start server with \"start\" to start the server!")
-                    print(colored("Server has not been started! Start server with \"start\" to start the server!", "red"))
+                self.__minecraft_input_handler(cmd_input)
             # Command to be handled by ServerRunner
             else:
-                logging.info("Command is a PyCraftServerManager command.")
-                cmd_input_args = cmd_input.split(" ")
-                command = cmd_input_args[0]
-                if command in self.commands_functions_dict:
-                    print(colored("Command \"%s\" received!" % cmd_input, "green"))
-                    fn = self.commands_functions_dict.get(command)[0]
-                    if fn is None:
-                        logging.warning("Command not programmed yet! Coming soon!")
-                        print(colored("Command not programmed yet! Coming soon!", "yellow"))
-                    else:
-                        logging.debug("Given valid command.")
-                        args_required = self.commands_functions_dict.get(command)[1]
-                        if args_required == -1:
-                            fn_return = fn(cmd_input)
-                        elif args_required == 0:
-                            fn_return = fn()
-                        elif len(cmd_input_args) - 1 == args_required:
-                            fn_return = fn(cmd_input_args[1::])
-                        else:
-                            logging.warning("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required))
-                            print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
-
-                        # Check what function returned if it did return anything
-                        if isinstance(fn_return, bool):
-                            if not fn_return:
-                                logging.warning("Command \"%s\" did not run successfully." % cmd_input)
-                                print(colored("Command \"%s\" did not run successfully." % cmd_input, "red"))
-                            else:
-                                logging.debug("Command \"%s\" ran successfully." % cmd_input)
-
-                else:
-                    logging.warning("Command not recognizes.")
-                    print(colored("Command not recognized.", "red"))
+                self.__pycraft_input_handler(cmd_input)
 
         logging.info("Exit")
 
@@ -254,7 +267,7 @@ class VanillaServerRunner:
             if isinstance(cmd_input, str):
                 logging.info("Passing user input to input handler")
                 cmd_input = cmd_input.strip()
-                self.__input_handler(cmd_input)
+                self.__input_handler(self, cmd_input)
             else:
                 logging.error("User input is not string. Stopping server process and terminating.")
                 self.server_process.sendline("stop".encode("utf-8"))
