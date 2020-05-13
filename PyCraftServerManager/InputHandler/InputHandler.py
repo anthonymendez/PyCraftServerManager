@@ -3,6 +3,7 @@ import re
 
 from termcolor import colored
 from ..Utilities.Singleton import Singleton
+from ..Utilities.Scheduler import Scheduler
 
 # TODO Move to it's own module possibly
 def is_windows():
@@ -45,7 +46,7 @@ class InputHandler():
             "schedule": (self.schedule, -1)
         }
         # Scheduler Class TODO: Redo class for InputHandler
-        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__push_to_input_queue, self)
+        self.Scheduler = Scheduler(self.main_directory, None, self.__push_to_input_queue, self)
         # TODO: Create thread for user input
         # TODO: Create thread to handle input queue
         logging.info("Exit")
