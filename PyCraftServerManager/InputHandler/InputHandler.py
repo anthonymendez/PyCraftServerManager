@@ -91,46 +91,71 @@ class InputHandler():
             # Check command type
             if is_minecraft_command:
                 # TODO: Minecraft Command
-                pass
+                succeded = self.__minecraft_command(command)
+                if not succeded:
+                    logging.error("Minecraft command failed.")
             elif is_specify_server:
                 # Specifys server to run command on
-                command_list = command.split(" ")
-                specifier = None
-                is_name = "name" == command_list[0:4]
-                is_id = "id" in command_list[0:2]
-                if "=" in command_list[0]:
-                    specifier = command_list[0].split("=")[1]
-                    real_command = " ".join(command_list[1::])
-                elif "=" in command_list[1]:
-                    specifier = command_list[2]
-                    real_command = " ".join(command_list[3::])
-                else:
-                    logging.error("Invalid specify server command.")
-                    continue
-
-                # Get serverrunner based on name or id
-                server_runner = None
-                if is_name:
-                    server_runner = self.name_to_server[specifier]
-                    pass
-                elif is_id:
-                    server_runner = self.name_to_server[specifier]
-                    pass
-                else:
-                    logging.error("Invalid specify server command.")
-                    continue
-
-                # Set temporary server runner to server runner found
-                if server_runner is None:
-                    logging.error("Server Runner not found.")
-                    continue
-                self.temp_server_runner = server_runner
-
-                # Prepend list with command string
-                self.__input_queue.insert(0, real_command)
-                is_input_queue_empty = len(self.__input_queue) == 0 
+                succeded = self.__specify_server(command)
+                if not succeded:
+                    logging.error("specify_server failed.")
             else:
                 # TODO: PyCraftServerManager command
-                pass
+                succeded = self.__pycraftservermanager_command(command)
+                if not succeded:
+                    logging.error("PyCraftServerManager command failed.")
 
         logging.info("Exit")
+
+    def __specify_server(self, command):
+        """
+        Sets temporary server runner to the server runner associated with the given name or ID.
+        """
+        command_list = command.split(" ")
+        specifier = None
+        is_name = "name" == command_list[0:4]
+        is_id = "id" in command_list[0:2]
+        if "=" in command_list[0]:
+            specifier = command_list[0].split("=")[1]
+            real_command = " ".join(command_list[1::])
+        elif "=" in command_list[1]:
+            specifier = command_list[2]
+            real_command = " ".join(command_list[3::])
+        else:
+            logging.error("Invalid specify server command.")
+            return False
+
+        # Get serverrunner based on name or id
+        server_runner = None
+        if is_name:
+            server_runner = self.name_to_server[specifier]
+            pass
+        elif is_id:
+            server_runner = self.name_to_server[specifier]
+            pass
+        else:
+            logging.error("Invalid specify server command.")
+            return False
+
+        # Set temporary server runner to server runner found
+        if server_runner is None:
+            logging.error("Server Runner not found.")
+            return False
+        self.temp_server_runner = server_runner
+
+        # Prepend list with command string
+        self.__input_queue.insert(0, real_command)
+        is_input_queue_empty = len(self.__input_queue) == 0 
+        return True
+
+    def __minecraft_command():
+        """
+        Sends command to the given temporary server runner, then sets temporary server runner back to default.
+        """
+        return False
+
+    def __pycraftservermanager_command():
+        """
+        Handles command like a PyCrafty command.
+        """
+        return False
