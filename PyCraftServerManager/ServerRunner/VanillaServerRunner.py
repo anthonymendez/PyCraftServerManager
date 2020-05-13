@@ -93,7 +93,7 @@ class VanillaServerRunner:
         self.minecraft_input_handler_lock = Lock()
         self.pycraft_input_handler_lock = Lock()
         self.stopping_all = False
-        self.input_thread = Thread(target=self.__input_loop)
+        self.input_thread = Thread(target=self.__input_loop_thread)
         self.input_thread.start()
         self.server_process_eof = True
         logging.debug("server_jar_filename: %s", self.server_jar_filename)
@@ -179,7 +179,7 @@ class VanillaServerRunner:
 
         logging.info("Exit")
 
-    def __input_loop(self):
+    def __input_loop_thread(self):
         """
         Handles incoming commands from the user.\n
         All commands prepended with "/" will be sent directly to the server.jar\n
@@ -203,7 +203,7 @@ class VanillaServerRunner:
                 break
         logging.info("Exit")
 
-    def __output_loop(self):
+    def __output_loop_thread(self):
         logging.info("Entry")
         while self.server_process is not None and not self.server_process_eof:
             try:
@@ -229,7 +229,7 @@ class VanillaServerRunner:
         print(colored("Server Process stopped.", "yellow"))
         logging.info("Exit")
 
-    def __server_process_wait(self):
+    def __server_process_watch_thread(self):
         # TODO: Possible Windows Compatibility thing?
         logging.info("Entry")
         self.server_process.wait()
@@ -265,12 +265,12 @@ class VanillaServerRunner:
             else:
                 self.server_process = pexpect.spawn(self.launch_str)
                 logging.debug("Launched normal server-process subroutine.")
-            self.output_thread = Thread(target=self.__output_loop)
+            self.output_thread = Thread(target=self.__output_loop_thread)
             sleep(0.1)
             self.output_thread.start()
             logging.debug("Launched output subroutine")
             # Watching server process
-            self.server_process_watch = Thread(target=self.__server_process_wait)
+            self.server_process_watch = Thread(target=self.__server_process_watch_thread)
             self.server_process_watch.start()
             logging.debug("Launched server-process watcher subroutine.")
             # Change directory to python project
