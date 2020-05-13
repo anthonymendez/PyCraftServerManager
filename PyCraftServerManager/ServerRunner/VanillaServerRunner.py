@@ -101,78 +101,6 @@ class VanillaServerRunner:
         logging.debug("command_functions_dict: %s", self.commands_functions_dict)
         logging.info("Exit")
 
-    def __run(self):
-        """
-        Start server with options set in ServerRunner.
-        """
-        logging.info("Entry")
-        # Change directory to server location
-        os.chdir(self.server_dir)
-        # Update Launch Options Handler
-        self.LaunchOptionsHandler.read_options()
-        # Prepare launch String
-        self.launch_str = """java %s -jar %s %s""" % (
-            " ".join(self.LaunchOptionsHandler.java_options),
-            self.server_jar_filename,
-            " ".join(self.LaunchOptionsHandler.game_options)
-        )
-        logging.debug("Launch Parameters: %s", self.launch_str)
-        # Spawn & Launch Server Terminal
-        # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
-        self.server_process_eof = False
-        if is_windows():
-            self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
-            logging.debug("Launched Windows server-process subroutine.")
-        # If OS is not windows, use pexpect.spawn as normal
-        else:
-            self.server_process = pexpect.spawn(self.launch_str)
-            logging.debug("Launched normal server-process subroutine.")
-        self.output_thread = Thread(target=self.__output_loop)
-        sleep(0.1)
-        self.output_thread.start()
-        logging.debug("Launched output subroutine")
-        # Watching server process
-        self.server_process_watch = Thread(target=self.__server_process_wait)
-        self.server_process_watch.start()
-        logging.debug("Launched server-process watcher subroutine.")
-        # Change directory to python project
-        os.chdir(self.main_directory)
-        logging.info("Exit")
-
-    def __stop(self):
-        """
-        Stop server along with output thread.
-        """
-        logging.info("Entry")
-        try:
-            self.server_process.sendline("stop".encode("utf-8"))
-            logging.debug("Sent stop to server process.")
-        except Exception as e:
-            logging.error("Could not send \"stop\" to server process. Reason:\n\t%s", str(e))
-        logging.info("Waiting for server-process to die.")
-        print(colored("Waiting for server-process to die.", "green"))
-        if is_windows():
-            # Similar to below but for Windows since we don't have isalive for Popen_Spawn
-            # From pexpect docs: pexpect.EOF is raised when EOF is read from a child. This usually means the child has exited.
-            self.server_process.wait()
-            logging.debug("Finished waiting for Windows server-process to die.")
-        else:
-            # Check if pexpect.spawn is still alive
-            while True:
-                if self.server_process is None and not self.server_process.isalive():
-                    break
-            logging.debug("Finished waiting for normal server-process to die.")
-        self.server_process = None
-        logging.info("Server process dead (hopefully). Waiting for output thread to die.")
-        print(colored("Server process dead (hopefully). Waiting for output thread to die.", "green"))
-        while True:
-            if self.output_thread is None or not self.output_thread.isAlive():
-                break
-        self.output_thread = None
-        logging.info("Output thread dead. Server officially stopped.")
-        print(colored("Output thread dead. Server officially stopped.", "green"))
-        logging.info("Exit")
-
     def __minecraft_input_handler(self, cmd_input):
         """
         Handles sending input to the Minecraft Server Process.
@@ -316,7 +244,37 @@ class VanillaServerRunner:
         if self.server_process is None:
             logging.info("Starting server...")
             print(colored("Starting server...", "green"))
-            self.__run()
+            # Change directory to server location
+            os.chdir(self.server_dir)
+            # Update Launch Options Handler
+            self.LaunchOptionsHandler.read_options()
+            # Prepare launch String
+            self.launch_str = """java %s -jar %s %s""" % (
+                " ".join(self.LaunchOptionsHandler.java_options),
+                self.server_jar_filename,
+                " ".join(self.LaunchOptionsHandler.game_options)
+            )
+            logging.debug("Launch Parameters: %s", self.launch_str)
+            # Spawn & Launch Server Terminal
+            # Check if OS is windows. If so, use pexpect.popen_spawn.PopenSpawn
+            self.server_process_eof = False
+            if is_windows():
+                self.server_process = pexpect.popen_spawn.PopenSpawn(self.launch_str)
+                logging.debug("Launched Windows server-process subroutine.")
+            # If OS is not windows, use pexpect.spawn as normal
+            else:
+                self.server_process = pexpect.spawn(self.launch_str)
+                logging.debug("Launched normal server-process subroutine.")
+            self.output_thread = Thread(target=self.__output_loop)
+            sleep(0.1)
+            self.output_thread.start()
+            logging.debug("Launched output subroutine")
+            # Watching server process
+            self.server_process_watch = Thread(target=self.__server_process_wait)
+            self.server_process_watch.start()
+            logging.debug("Launched server-process watcher subroutine.")
+            # Change directory to python project
+            os.chdir(self.main_directory)
         else:
             logging.warning("Server already running!")
             print(colored("Server already running!", "yellow"))
@@ -333,7 +291,33 @@ class VanillaServerRunner:
         else:
             logging.info("Stopping server...")
             print(colored("Stopping server...", "green"))
-            self.__stop()
+            try:
+                self.server_process.sendline("stop".encode("utf-8"))
+                logging.debug("Sent stop to server process.")
+            except Exception as e:
+                logging.error("Could not send \"stop\" to server process. Reason:\n\t%s", str(e))
+            logging.info("Waiting for server-process to die.")
+            print(colored("Waiting for server-process to die.", "green"))
+            if is_windows():
+                # Similar to below but for Windows since we don't have isalive for Popen_Spawn
+                # From pexpect docs: pexpect.EOF is raised when EOF is read from a child. This usually means the child has exited.
+                self.server_process.wait()
+                logging.debug("Finished waiting for Windows server-process to die.")
+            else:
+                # Check if pexpect.spawn is still alive
+                while True:
+                    if self.server_process is None and not self.server_process.isalive():
+                        break
+                logging.debug("Finished waiting for normal server-process to die.")
+            self.server_process = None
+            logging.info("Server process dead (hopefully). Waiting for output thread to die.")
+            print(colored("Server process dead (hopefully). Waiting for output thread to die.", "green"))
+            while True:
+                if self.output_thread is None or not self.output_thread.isAlive():
+                    break
+            self.output_thread = None
+            logging.info("Output thread dead. Server officially stopped.")
+            print(colored("Output thread dead. Server officially stopped.", "green"))
         logging.info("Exit")
 
     def restart(self):
