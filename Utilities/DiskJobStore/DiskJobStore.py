@@ -169,6 +169,5 @@ class DiskJobStore(MemoryJobStore):
         Saves `self._jobs_index` to `self.jobs_index_file_path` file.
         """
         with self.disk_lock:
-            print(self._jobs)
             pickle.dump(self._jobs, open(file=self.jobs_file_path, mode="wb"))
             pickle.dump(self._jobs_index, open(file=self.jobs_index_path, mode="wb"))
