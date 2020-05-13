@@ -1,5 +1,5 @@
-from ServerRunner.VanillaServerRunner import VanillaServerRunner
-from Utilities.MojangAPI import player_to_uuid
+from PyCraftServerManager.ServerRunner.VanillaServerRunner import VanillaServerRunner
+from PyCraftServerManager.Utilities.MojangAPI import player_to_uuid
 
 from threading import Thread
 

@@ -10,7 +10,7 @@ logging = log.getLogger(__name__)
 from threading import Thread
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.background import BackgroundScheduler
-from Utilities.DiskJobStore.DiskJobStore import DiskJobStore
+from ..Utilities.DiskJobStore.DiskJobStore import DiskJobStore
 
 server_runner_ = None
 
