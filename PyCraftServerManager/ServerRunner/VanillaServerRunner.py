@@ -1,6 +1,5 @@
 import os
 import pexpect
-import tarfile
 import re
 import logging
 from datetime import datetime
@@ -21,8 +20,6 @@ from threading import Thread, Lock
 from time import sleep
 from termcolor import colored
 from pexpect import popen_spawn
-from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
-from shutil import copy
 from ..Configuration.WhitelistHandler import WhitelistHandler
 from ..Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
