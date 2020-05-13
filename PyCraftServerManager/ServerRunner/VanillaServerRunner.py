@@ -29,6 +29,7 @@ from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
 from ..Utilities.Utilities import *
 from ..Utilities.Scheduler import Scheduler
 from ..Utilities.Backup import *
+from ..Utilities.JarManager import *
 from ..ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
 
 if is_windows():
@@ -77,7 +78,7 @@ class VanillaServerRunner:
             "whitelist": (self.whitelist, -1)
         }
         # Vanilla Server Downloader
-        self.VanillaServerDownloader = VanillaServerDownloader(self.main_directory, self.server_dir, self.server_jars)
+        self.ServerDownloader = VanillaServerDownloader(self.main_directory, self.server_dir, self.server_jars)
         # Server Properties Handler
         self.ServerPropertiesHandler = ServerPropertiesHandler(self.main_directory, self.server_dir)
         # Whitelist Handler
@@ -504,11 +505,14 @@ class VanillaServerRunner:
         
         # Check command type, pass off to function
         if cmd_input_args[0] == "set":
-            return self.__jar_set(cmd_input_args[1])
+            return jar_set(self.server_dir, self.server_jars, cmd_input_args[1])
         elif cmd_input_args[0] == "download":
-            return self.__jar_download(cmd_input_args[1])
+            succeded = jar_download(self.ServerDownloader, cmd_input_args[1])
+            if succeded:
+                self.server_jar_filename = os.path.join(self.server_dir, cmd_input_args[1] + ".jar")
+            return succeded
         elif cmd_input_args[0] == "update":
-            return self.__jar_update()
+            return jar_update(self.ServerDownloader)
         else:
             logging.warning("Valid command type not passed in.")
             logging.info("Exit")
@@ -673,68 +677,3 @@ class VanillaServerRunner:
         
         logging.info("Exit")
         return True
-
-    def __jar_set(self, jar):
-        """
-        Sets specified jar to use in server folder.\n
-        Checks if jar exists in server_jars folder.\n
-        If so, copies to server folder and sets jar.\n
-        Otherwise, returns False.\n
-        Removes any other jar files in th server folder.\n
-        Run in terminal like so:\n
-        `jar set 1.15.2`\n
-        Returns boolean if it was successful.
-        """
-        logging.info("Entry")
-        # Check if file exists
-        jar_path = os.path.join(self.server_jars, jar + ".jar")
-        if not os.path.isfile(jar_path):
-            logging.info("Exit")
-            return False
-
-        # Remove all .jar files in server directory
-        server_dir_files = os.listdir(self.server_dir)
-        for s_d_file in server_dir_files:
-            if s_d_file.endswith(".jar"):
-                os.remove(os.path.join(self.server_dir, s_d_file))
-                logging.debug("Removed %s.", s_d_file)
-        logging.info("Removed all .jars from server folder.")
-
-        # Copy file to server directory
-        to_copy_path = os.path.join(self.server_dir, jar + ".jar")
-        try:
-            copy(jar_path, to_copy_path)
-            logging.info("Copied version to path.")
-        except Exception as e:
-            logging.error("Could not copy file to server directory. %s", str(e))
-            logging.info("Exit")
-            return False
-       
-        # Set server jar 
-        self.server_jar_filename = to_copy_path
-        logging.info("Exit")
-        return True        
-
-    def __jar_download(self, version):
-        """
-        Downloads specified server jar in server backups folder.\n
-        Run in terminal like so:\n
-        `jar download 1.15.2`\n
-        Returns boolean if it was successful.
-        """
-        logging.info("Entry")
-        success = self.VanillaServerDownloader.download_server_jar(version)
-        logging.info("Exit")
-        return success
-
-    def __jar_update(self):
-        """
-        Updates the local download link database of server jars.\n
-        Run in terminal like so:\n
-        `jar update`\n
-        Returns boolean if it was successful.
-        """
-        logging.info("Entry")
-        success = self.VanillaServerDownloader.parse_mojang_download_links()
-        logging.info("Exit")
-        return success

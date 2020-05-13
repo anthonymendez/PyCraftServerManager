@@ -24,7 +24,7 @@ class VanillaServerDownloader():
         self.server_jars = server_jars_folder
         logging.info("Exit")
 
-    def parse_mojang_download_links(self):
+    def parse_download_links(self):
         """
         Goes through site above and parses each download page for the Mojang download links for server jars.
         """
@@ -91,7 +91,7 @@ class VanillaServerDownloader():
                 logging.info("Created server jars directory.")
                 os.mkdir(self.server_jars)
             if len(self.download_links) == 0:
-                if not self.parse_mojang_download_links():
+                if not self.parse_download_links():
                     logging.info("Exit")
                     return False
             link = self.download_links.get(version)
