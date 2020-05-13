@@ -94,6 +94,9 @@ class VanillaServerRunner:
         logging.debug("command_functions_dict: %s", self.commands_functions_dict)
         logging.info("Exit")
 
+    def is_alive(self):
+        return self.server_process is not None and not self.server_process_eof
+
     def __run(self):
         """
         Start server with options set in ServerRunner.

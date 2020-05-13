@@ -115,7 +115,6 @@ class InputHandler():
             # Get input at beginning of list and update is_empty bool
             command = self.__input_queue.pop(0)
             is_input_queue_empty = len(self.__input_queue) == 0
-            print(is_input_queue_empty)
             logging.info("Handling \"%s\"", command)
 
             is_minecraft_command = command[0] == '/'
@@ -226,8 +225,19 @@ class InputHandler():
         """
         logging.info("Entry")
         self.stopped = True
-        # TODO: Stop all running servers
+
+        # Stop all running servers
+        for name, server_runner in self.name_to_server:
+            while server_runner.is_alive():
+                server_runner.stop()
+            logging.debug("Stopped server with name=\"%s\"", name)
+        for id_, server_runner in self.id_to_server:
+            while server_runner.is_alive():
+                server_runner.stop()
+            logging.debug("Stopped server with id=\"%s\"", id_)
+
         logging.info("Exit")
+        return True
 
     def schedule(self, cmd_input_args):
         logging.info("Entry")
