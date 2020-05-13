@@ -173,7 +173,7 @@ class VanillaServerRunner:
         print(colored("Output thread dead. Server officially stopped.", "green"))
         logging.info("Exit")
 
-    def __minecraft_input_handler(self, cmd_input):
+    def minecraft_input_handler(self, cmd_input):
         """
         Handles sending input to the Minecraft Server Process.
         """
@@ -185,9 +185,11 @@ class VanillaServerRunner:
                 logging.info("Sending command to %s server... ", cmd_input_after_slash)
                 print(colored("Sending command to %s server... " % cmd_input_after_slash, "green"))
                 self.server_process.sendline(cmd_input_after_slash.encode("utf-8"))
+                return True
             else:
                 logging.warning("Server has not been started! Start server with \"start\" to start the server!")
                 print(colored("Server has not been started! Start server with \"start\" to start the server!", "red"))
+                return False
 
     def __pycraft_input_handler(self, cmd_input):
         """

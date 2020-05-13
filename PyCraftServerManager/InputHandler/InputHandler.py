@@ -90,7 +90,7 @@ class InputHandler():
             is_specify_server = command[0:2] == "id" or command[0:4] == "name"
             # Check command type
             if is_minecraft_command:
-                # TODO: Minecraft Command
+                # Executes Minecraft Command
                 succeded = self.__minecraft_command(command)
                 if not succeded:
                     logging.error("Minecraft command failed.")
@@ -100,7 +100,7 @@ class InputHandler():
                 if not succeded:
                     logging.error("specify_server failed.")
             else:
-                # TODO: PyCraftServerManager command
+                # Handles PyCraftServerManager command
                 succeded = self.__pycraftservermanager_command(command)
                 if not succeded:
                     logging.error("PyCraftServerManager command failed.")
@@ -148,13 +148,15 @@ class InputHandler():
         is_input_queue_empty = len(self.__input_queue) == 0 
         return True
 
-    def __minecraft_command():
+    def __minecraft_command(self, command):
         """
         Sends command to the given temporary server runner, then sets temporary server runner back to default.
         """
-        return False
+        succeded = self.temp_server_runner.minecraft_input_handler(command)
+        self.temp_server_runner = self.default_server_runner
+        return succeded
 
-    def __pycraftservermanager_command():
+    def __pycraftservermanager_command(self, command):
         """
         Handles command like a PyCrafty command.
         """
