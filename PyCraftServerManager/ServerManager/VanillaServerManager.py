@@ -25,7 +25,7 @@ if is_windows():
     import colorama
     colorama.init()
 
-class VanillaServerRunner:
+class VanillaServerManager:
     """
     Vanilla Server Runner handles launching of the Minecraft 
     Server jar, and configuring the launch parameters.
@@ -363,9 +363,9 @@ class VanillaServerRunner:
         To call in terminal:\n
         `jar copy 1.15.2`, `jar download 1.15.2`, etc.\n
         To call function in Python:\n
-        `VanillaServerRunnerObject.jar("copy 1.15.2")`\n
+        `VanillaServerManagerObject.jar("copy 1.15.2")`\n
         or\n
-        `VanillaServerRunnerObject.jar(["copy", "1.15.2"])`\n
+        `VanillaServerManagerObject.jar(["copy", "1.15.2"])`\n
         Returns boolean if it was successful.
         """
         logging.info("Entry")
