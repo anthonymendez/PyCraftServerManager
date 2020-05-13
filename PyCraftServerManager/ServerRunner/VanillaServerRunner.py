@@ -4,10 +4,6 @@ import tarfile
 import re
 import logging
 
-# TODO Move to it's own module possibly
-def is_windows():
-    return os.name == "nt"
-
 from threading import Thread, Lock
 from time import sleep
 from termcolor import colored
@@ -18,6 +14,7 @@ from shutil import copy
 from ..Configuration.WhitelistHandler import WhitelistHandler
 from ..Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
+from ..Utilities.Utilities import is_windows
 from ..Utilities.Scheduler import Scheduler
 from ..ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
 
