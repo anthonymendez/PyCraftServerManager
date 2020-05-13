@@ -24,11 +24,13 @@ if is_windows():
     colorama.init()
 
 stopping_all = True
+cmd_input_queue = []
 
 def init():
     """
     Starts PyCraftServerManager input thread.
     """
+    stopping_all = False
     pass
 
 def input_loop_thread():
@@ -44,7 +46,7 @@ def input_loop_thread():
         if isinstance(cmd_input, str):
             logging.info("Passing user input to input handler")
             cmd_input = cmd_input.strip()
-            input_handler(cmd_input)
+            push_to_input_queue(cmd_input)
         else:
             logging.error("User input is not string.")
             # self.server_process.sendline("stop".encode("utf-8"))
@@ -52,11 +54,26 @@ def input_loop_thread():
             break
     logging.info("Exit")
 
-def input_handler(cmd_input):
+def push_to_input_queue(cmd_input):
     """
-    Handles stripped input from user.
+    Pushes to input queue only if `stopping_all` is false.
+
+    Returns bool on success.
     """
-    pass
+    if not stopping_all:
+        cmd_input_queue.append(cmd_input)
+        return True
+    else:
+        return False
+
+def input_handler_thread():
+    """
+    Handles processing cmd_input_queue. 
+    
+    Only exits when `exit` command is sent and input queue is empty.
+    """
+    while not stopping_all or not len(cmd_input_queue) == 0:
+        pass
 
 def exit():
     """
