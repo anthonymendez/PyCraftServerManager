@@ -51,7 +51,6 @@ class VanillaServerRunner:
         logging.info("Entry")
         # Server running variables
         self.server_process = None
-        self.input_thread = None
         self.output_thread = None
         # Handle optional arguments
         self.server_jar_filename = kwargs.get('server_jar_filename', "server.jar")
@@ -83,16 +82,12 @@ class VanillaServerRunner:
         self.WhitelistHandler = WhitelistHandler(self.main_directory, self.server_dir)
         # Launch Options Handler
         self.LaunchOptionsHandler = LaunchOptionsHandler(self.main_directory, self.server_dir)
-        # Scheduler Class
-        self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler, self)
         # Enable Eula
         self.__enable_eula()
         # Start up input thread
         self.minecraft_input_handler_lock = Lock()
         self.pycraft_input_handler_lock = Lock()
         self.stopping_all = False
-        self.input_thread = Thread(target=self.__input_loop)
-        self.input_thread.start()
         self.server_process_eof = True
         logging.debug("server_jar_filename: %s", self.server_jar_filename)
         logging.debug("server_jar folder: %s", self.server_jars)
@@ -228,53 +223,6 @@ class VanillaServerRunner:
                 logging.warning("Command not recognized.")
                 print(colored("Command not recognized.", "red"))
 
-    @staticmethod
-    def __input_handler(self, cmd_input):
-        """
-        Handles input given by input thread/command line or a scheduled command
-        """
-        logging.info("Entry")
-        logging.info("cmd_input: %s", str(cmd_input))
-        if self.input_thread.isAlive():
-            # Empty Input
-            if len(cmd_input) == 0:
-                logging.error("__input_handler given empty input. Not valid.")
-                logging.info("Exit")
-                return
-
-            # Command to be sent to the server.jar
-            if cmd_input[0] == '/':
-                self.__minecraft_input_handler(cmd_input)
-            # Command to be handled by ServerRunner
-            else:
-                self.__pycraft_input_handler(cmd_input)
-
-        logging.info("Exit")
-
-    def __input_loop(self):
-        """
-        Handles incoming commands from the user.\n
-        All commands prepended with "/" will be sent directly to the server.jar\n
-        All other commands will be checked to see if they're supported by the program.
-        """
-        logging.info("Entry")
-        while not self.stopping_all:
-            # TODO: Figure out how to put input on bottom of terminal always
-            logging.info("Waiting on user input.")
-            cmd_input = input()
-            logging.info("User input: %s", str(cmd_input))
-
-            if isinstance(cmd_input, str):
-                logging.info("Passing user input to input handler")
-                cmd_input = cmd_input.strip()
-                self.__input_handler(self, cmd_input)
-            else:
-                logging.error("User input is not string. Stopping server process and terminating.")
-                self.server_process.sendline("stop".encode("utf-8"))
-                self.server_process.terminate(force=True)
-                break
-        logging.info("Exit")
-
     def __output_loop(self):
         logging.info("Entry")
         while self.server_process is not None and not self.server_process_eof:
@@ -282,11 +230,6 @@ class VanillaServerRunner:
                 output = self.server_process.readline().decode("utf-8").strip()
                 if not len(output) == 0:
                     print(output + "\n", end = "")
-                elif not self.input_thread.isAlive():
-                    self.server_process.sendline("stop".encode("utf-8"))
-                    if self.server_process.isalive():
-                        self.server_process.terminate(force=True)
-                    break
             except pexpect.exceptions.TIMEOUT:
                 # print(colored("Output loop Timeout exception.", "red"))
                 continue
