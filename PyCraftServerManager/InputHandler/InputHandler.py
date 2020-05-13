@@ -134,6 +134,7 @@ class InputHandler():
         """
         Sets temporary server runner to the server runner associated with the given name or ID.
         """
+        logging.info("Entry")
         command_list = command.split(" ")
         specifier = None
         is_name = "name" == command_list[0:4]
@@ -146,6 +147,7 @@ class InputHandler():
             real_command = " ".join(command_list[3::])
         else:
             logging.error("Invalid specify server command.")
+            logging.info("Exit")
             return False
 
         # Get serverrunner based on name or id
@@ -158,45 +160,55 @@ class InputHandler():
             pass
         else:
             logging.error("Invalid specify server command.")
+            logging.info("Exit")
             return False
 
         # Set temporary server runner to server runner found
         if server_runner is None:
             logging.error("Server Runner not found.")
+            logging.info("Exit")
             return False
         self.temp_server_runner = server_runner
 
         # Prepend list with command string
         self.__input_queue.insert(0, real_command)
         is_input_queue_empty = len(self.__input_queue) == 0 
+        logging.info("Exit")
         return True
 
     def __minecraft_command(self, command):
         """
         Sends command to the given temporary server runner, then sets temporary server runner back to default.
         """
+        logging.info("Entry")
         succeded = self.temp_server_runner.minecraft_input_handler(command)
         self.temp_server_runner = self.default_server_runner
+        logging.info("Exit")
         return succeded
 
     def __pycraftservermanager_command(self, command):
         """
         Handles command like a PyCrafty command.
         """
+        logging.info("Entry")
         command_args = command.split(" ")
         # Check if this is an Input Handler command. If so, run.
         if command_args[0] in self.commands_functions_dict:
             function = self.commands_functions_dict.get(command_args[0])[0]
             arg_count = self.commands_functions_dict.get(command_args[0])[1]
             if arg_count == 0:
+                logging.info("Exit")
                 return function()
             elif arg_count == -1:
+                logging.info("Exit")
                 return function(command)
             elif arg_count == len(command_args) - 1:
+                logging.info("Exit")
                 return function(command_args[1::])
         else:
             succeded = self.temp_server_runner.pycraft_input_handler(command)
             self.temp_server_runner = self.default_server_runner
+            logging.info("Exit")
             return succeded
 
     def exit(self):
