@@ -2,7 +2,6 @@
 import dill as pickle
 import os
 
-
 from threading import Lock
 from apscheduler.util import datetime_to_utc_timestamp
 from apscheduler.job import Job
@@ -13,15 +12,25 @@ class DiskJobStore(MemoryJobStore):
     Stores jobs in an array in RAM and saves to a file.
     """
 
-    def __init__(self, disk_dir = "DiskJobStore", jobs_file_name = "jobs.diskjobstore", jobs_index_file = "jobs_index.diskjobstore", server_runner = None):
+    def __init__(self, 
+                    disk_dir = "DiskJobStore",
+                    jobs_file_name = "jobs.diskjobstore",
+                    jobs_index_name = "jobs_index.diskjobstore",
+                    scheduler = None,
+                    alias = None,
+                    server_runner = None):
         """
         Handles initializing DiskJobStore.
         """
         super().__init__()
         self.disk_dir = disk_dir
         self.jobs_file_path = os.path.join(self.disk_dir, jobs_file_name)
-        self.jobs_index_file_path = os.path.join(self.disk_dir, jobs_index_file)
+        self.jobs_index_path = os.path.join(self.disk_dir, jobs_index_name)
         self.disk_lock = Lock()
+
+        self._scheduler = scheduler
+        self._alias = alias
+
         # Create directory if it has not been created.
         if not os.path.exists(self.disk_dir):
             os.mkdir(self.disk_dir)
@@ -87,7 +96,7 @@ class DiskJobStore(MemoryJobStore):
 
     def remove_job(self, job_id):
         """
-        Removes all jobs from this store.
+        Removes all jobs from this store.e
 
         Removes from memory and from disk.
         """
@@ -121,21 +130,20 @@ class DiskJobStore(MemoryJobStore):
         Sets `self._jobs_index` to what currently exists in `self.jobs_index_file_path` file.
         """
         with self.disk_lock:
-
             # Create file if it has not been created.
-            if not os.path.exists(self.jobs_index_file_path):
-                with open(file=self.jobs_index_file_path, mode="wb") as new_file:
+            if not os.path.exists(self.jobs_index_path):
+                with open(file=self.jobs_index_path, mode="wb") as new_file:
                     pickle.dump([], file=new_file)
             # If file does exist, load values from it.
             else:
                 try:
-                    with open(file=self.jobs_index_file_path, mode="rb") as disk_file:
+                    with open(file=self.jobs_index_path, mode="rb") as disk_file:
                         self._jobs_index = pickle.load(file=disk_file)
                 except EOFError as e:
                     self._logger.debug("End of file error. Doing nothing.")
                 except Exception as e:
                     self._logger.exception("Couldn't load self._jobs.")
-                    
+
             # Create file if it has not been created.
             if not os.path.exists(self.jobs_file_path):
                 with open(file=self.jobs_file_path, mode="wb") as new_file:
@@ -146,6 +154,8 @@ class DiskJobStore(MemoryJobStore):
                     with open(file=self.jobs_file_path, mode="rb") as disk_file:
                         self._jobs = pickle.load(file=disk_file)
                         for job in self._jobs:
+                            job[0]._scheduler = self._scheduler
+                            job[0]._jobstore_alias = self._alias
                             self.update_job(job)
                 except EOFError as e:
                     self._logger.debug("End of file error. Doing nothing.")
@@ -161,4 +171,4 @@ class DiskJobStore(MemoryJobStore):
         with self.disk_lock:
             print(self._jobs)
             pickle.dump(self._jobs, open(file=self.jobs_file_path, mode="wb"))
-            pickle.dump(self._jobs_index, open(file=self.jobs_index_file_path, mode="wb"))
+            pickle.dump(self._jobs_index, open(file=self.jobs_index_path, mode="wb"))

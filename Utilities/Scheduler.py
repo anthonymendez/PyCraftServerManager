@@ -34,10 +34,10 @@ class Scheduler():
         self.sched = BackgroundScheduler()
         global server_runner_
         server_runner_ = server_runner
-        jobstore = DiskJobStore(server_runner=server_runner_)
+        jobstore = DiskJobStore(server_runner=server_runner_, scheduler=self.sched)
         self.sched.add_jobstore(jobstore)
         self.sched.start()
-        self.job_count = 0
+        self.job_count = len(jobstore.get_all_jobs())
         logging.info("Exit")
     
     def add_scheduled_function(self, function, function_args, cron_string):
