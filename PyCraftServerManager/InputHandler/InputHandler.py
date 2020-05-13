@@ -19,6 +19,10 @@ class InputHandler():
         super().__init__()
         self.stopped = False
         self.__input_queue = []
+        self.default_server_runner = None
+        self.temp_server_runner = None
+        self.name_to_server = {}
+        self.id_to_server = {}
         # TODO: Create thread for user input
         # TODO: Create thread to handle input queue
         logging.info("Exit")
@@ -86,7 +90,7 @@ class InputHandler():
             is_specify_server = command[0:2] == "id" or command[0:4] == "name"
             # Check command type
             if is_minecraft_command:
-                # Minecraft Command
+                # TODO: Minecraft Command
                 pass
             elif is_specify_server:
                 # Specifys server to run command on
@@ -107,25 +111,26 @@ class InputHandler():
                 # Get serverrunner based on name or id
                 server_runner = None
                 if is_name:
-                    # TODO: Search by server name
+                    server_runner = self.name_to_server[specifier]
                     pass
                 elif is_id:
-                    # TODO: Search by server id
+                    server_runner = self.name_to_server[specifier]
                     pass
                 else:
-                    # TODO: Error out, invalid specify server command
-                    pass
+                    logging.error("Invalid specify server command.")
+                    continue
 
-                # TODO: Select server as current temporary server
+                # Set temporary server runner to server runner found
                 if server_runner is None:
                     logging.error("Server Runner not found.")
                     continue
+                self.temp_server_runner = server_runner
 
-                # TODO: Prepend list with command string
+                # Prepend list with command string
                 self.__input_queue.insert(0, real_command)
                 is_input_queue_empty = len(self.__input_queue) == 0 
             else:
-                # PyCraftServerManager command
+                # TODO: PyCraftServerManager command
                 pass
 
         logging.info("Exit")
