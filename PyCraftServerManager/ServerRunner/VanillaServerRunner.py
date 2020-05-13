@@ -3,18 +3,30 @@ import pexpect
 import tarfile
 import re
 import logging
+from datetime import datetime
+
+# Set up Logging
+time_now = str(datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_").replace(".", "_")
+log_path = os.path.join("log", time_now)
+if not os.path.exists("log"):
+    os.mkdir("log")
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
+log_path = os.path.join(log_path, "master.log")
+logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s - %(levelname)s - %(message)s", 
+                    filename=log_path, 
+                    level=logging.DEBUG)
 
 from threading import Thread, Lock
 from time import sleep
 from termcolor import colored
 from pexpect import popen_spawn
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_LZMA, ZIP_BZIP2
-from datetime import datetime
 from shutil import copy
 from ..Configuration.WhitelistHandler import WhitelistHandler
 from ..Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
-from ..Utilities.Utilities import is_windows
+from ..Utilities.Utilities import *
 from ..Utilities.Scheduler import Scheduler
 from ..ServerDownloader.VanillaServerDownloader import VanillaServerDownloader
 
@@ -34,17 +46,6 @@ class VanillaServerRunner:
         Example inputs:\n 
         \t\"../server/\" - Back one directory, then into server folder
         """
-        # Set up Logging
-        time_now = str(datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_").replace(".", "_")
-        log_path = os.path.join("log", time_now)
-        if not os.path.exists("log"):
-            os.mkdir("log")
-        if not os.path.exists(log_path):
-            os.mkdir(log_path)
-        log_path = os.path.join(log_path, "master.log")
-        logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s - %(levelname)s - %(message)s", 
-                            filename=log_path, 
-                            level=logging.DEBUG)
         logging.info("Entry")
         # Server running variables
         self.server_process = None
@@ -85,7 +86,7 @@ class VanillaServerRunner:
         # Scheduler Class
         self.Scheduler = Scheduler(self.main_directory, self.server_dir, self.__input_handler, self)
         # Enable Eula
-        self.__enable_eula()
+        enable_eula(self.server_dir)
         # Start up input thread
         self.minecraft_input_handler_lock = Lock()
         self.pycraft_input_handler_lock = Lock()
@@ -766,33 +767,3 @@ class VanillaServerRunner:
         success = self.VanillaServerDownloader.parse_mojang_download_links()
         logging.info("Exit")
         return success
-
-    def __enable_eula(self):
-        """
-        Enables eula in eula.txt.
-        """
-        logging.info("Entry")
-        # Check if it exists
-        eula_path = os.path.join(self.server_dir, "eula.txt")
-        if not os.path.isfile(eula_path):
-            # Create eula.txt
-            try:
-                logging.info("Creating eula with \"eula=true\".")
-                open(eula_path, "w").write("eula=true")
-                logging.info("Exit")
-                return True
-            except Exception as e:
-                logging.error("Could not create eula. %s", str(e))
-                logging.info("Exit")
-                return False
-
-        # If it does exist, just write eula=true
-        try:
-            logging.info("Writing to eula with \"eula=true\".")
-            open(eula_path, "w").write("eula=true")
-            logging.info("Exit")
-            return True
-        except Exception as e:
-            logging.error("Could not write to eula. %s", str(e))
-            logging.info("Exit")
-            return False
