@@ -23,8 +23,8 @@ if is_windows():
     import colorama
     colorama.init()
 
-stopping_all = True
-cmd_input_queue = []
+__stopping_all = True
+__cmd_input_queue = []
 
 input_queue_lock = Lock()
 
@@ -40,7 +40,7 @@ def input_loop_thread():
     Handles accepting input from the user in a thread until an exit is met.
     """
     logging.info("Entry")
-    while not stopping_all:
+    while not __stopping_all:
         logging.info("Waiting on user input.")
         cmd_input = input()
         logging.info("User input: %s", str(cmd_input))
@@ -62,27 +62,38 @@ def push_to_input_queue(cmd_input):
 
     Returns bool on success.
     """
-    if not stopping_all:
+    if not __stopping_all:
         with input_queue_lock:
-            cmd_input_queue.append(cmd_input)
+            __cmd_input_queue.append(cmd_input)
         return True
     else:
         return False
 
-def input_handler_thread():
+def input_queue_handler_thread():
     """
     Handles processing cmd_input_queue. 
     
     Only exits when `exit` command is sent and input queue is empty.
     """
-    while not stopping_all or not len(cmd_input_queue) == 0:
+    while not __stopping_all or not len(__cmd_input_queue) == 0:
         # Remove first item off the queue
         cmd_input = None
         with input_queue_lock:
-            cmd_input = cmd_input_queue.pop(0)
+            cmd_input = __cmd_input_queue.pop(0)
 
-        # TODO: Do something with it
-        pass
+        # Run command and check if it ran successfully.
+        if __input_command_handler(cmd_input):
+            print("Command ran successfully.")
+        else:
+            print("Command did not run successfully.")
+
+def __input_command_handler(cmd_input):
+    """
+    Handles commands passed to it by input_queue_handler_thread.
+    
+    Returns bool if command was successfully run.
+    """
+    return False
 
 def exit():
     """
