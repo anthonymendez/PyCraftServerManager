@@ -17,18 +17,23 @@ logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s
 from threading import Thread, Lock
 from termcolor import colored
 
-# from Utilities.Utilities import *
 from PyCraftServerManager.Utilities.Utilities_ import *
 
+# Import colorama for terminal colors on Windows
 if is_windows():
     import colorama
     colorama.init()
 
+# If program is stopping to exit
 __stopping_all = True
+
+# List to hold input commands to run
 __cmd_input_queue = []
 
+# Lock for inserting and removing from input queue
 input_queue_lock = Lock()
 
+# Threads to handle input command
 user_input_loop = None
 input_queue_handler = None
 
@@ -64,17 +69,22 @@ def input_loop_thread():
 
         logging.info("User input: %s", str(cmd_input))
 
-        if isinstance(cmd_input, str):
-            logging.info("Passing user input to input handler")
-            cmd_input = cmd_input.strip()
-            push_to_input_queue(cmd_input)
-            if cmd_input == "exit":
-                break
-        else:
+        if not isinstance(cmd_input, str):
             logging.error("User input is not string.")
-            # self.server_process.sendline("stop".encode("utf-8"))
-            # self.server_process.terminate(force=True)
             break
+        
+        # Trim string and check if its empty
+        cmd_input = cmd_input.strip()
+        if len(cmd_input) == 0:
+            logging.info("User input empty.")
+            continue
+
+        logging.info("Passing user input to input handler.")
+        push_to_input_queue(cmd_input)
+        if cmd_input == "exit":
+            logging.info("Exiting program.")
+            break
+
     __stopping_all = True
     logging.info("Exit")
 
@@ -98,6 +108,7 @@ def input_queue_handler_thread():
     Only exits when `exit` command is sent and input queue is empty.
     """
     while not __stopping_all or not len(__cmd_input_queue) == 0:
+        # If queue is empty, just start loop again
         if len(__cmd_input_queue) == 0:
             continue
 
@@ -118,6 +129,29 @@ def __input_command_handler(cmd_input):
     
     Returns bool if command was successfully run.
     """
+    if not isinstance(cmd_input, str):
+        logging.warning("cmd_input %s is not of type string.", str(cmd_input))
+        return False
+
+    if len(cmd_input) == 0:
+        logging.warning("Empty command passed in.")
+        return True
+
+    is_specifying_server = "name" in cmd_input.split(" ")[0] or "id" in cmd_input.split(" ")[0]
+    is_minecraft_command = cmd_input[0] == "/"
+
+    if is_specifying_server:
+        # Set temporary server runner to specified server
+        # Push command back to the head of the input queue list
+        pass
+    elif is_minecraft_command:
+        # Send minecraft command to temporary server runner
+        # Set temporary sesrver runner back to default
+        pass
+    else:
+        # Handle PyCraftServerManager command
+        pass
+    
     return False
 
 def exit():
