@@ -17,7 +17,8 @@ logging.basicConfig(format="%(asctime)s - %(filename)s - %(funcName)s - %(name)s
 from threading import Thread, Lock
 from termcolor import colored
 
-from Utilities.Utilities import *
+# from Utilities.Utilities import *
+from PyCraftServerManager.Utilities.Utilities_ import *
 
 if is_windows():
     import colorama
@@ -28,32 +29,53 @@ __cmd_input_queue = []
 
 input_queue_lock = Lock()
 
+user_input_loop = None
+input_queue_handler = None
+
 def init():
     """
     Starts PyCraftServerManager input thread.
     """
-    stopping_all = False
-    pass
+    global __stopping_all
+    __stopping_all = False
+    # Creates threads for user input and handling input queue
+    user_input_loop = Thread(target=input_loop_thread)
+    input_queue_handler = Thread(target=input_queue_handler_thread)
+    user_input_loop.start()
+    input_queue_handler.start()
 
 def input_loop_thread():
     """
     Handles accepting input from the user in a thread until an exit is met.
     """
     logging.info("Entry")
+    global __stopping_all
+    logging.debug("__stopping_all: %s", str(__stopping_all))
     while not __stopping_all:
         logging.info("Waiting on user input.")
-        cmd_input = input()
+        try:
+            cmd_input = input(">")
+        except EOFError as e:
+            logging.warning(e)
+            break
+        except Exception as e:
+            logging.error(e)
+            break
+
         logging.info("User input: %s", str(cmd_input))
 
         if isinstance(cmd_input, str):
             logging.info("Passing user input to input handler")
             cmd_input = cmd_input.strip()
             push_to_input_queue(cmd_input)
+            if cmd_input == "exit":
+                break
         else:
             logging.error("User input is not string.")
             # self.server_process.sendline("stop".encode("utf-8"))
             # self.server_process.terminate(force=True)
             break
+    __stopping_all = True
     logging.info("Exit")
 
 def push_to_input_queue(cmd_input):
@@ -76,6 +98,9 @@ def input_queue_handler_thread():
     Only exits when `exit` command is sent and input queue is empty.
     """
     while not __stopping_all or not len(__cmd_input_queue) == 0:
+        if len(__cmd_input_queue) == 0:
+            continue
+
         # Remove first item off the queue
         cmd_input = None
         with input_queue_lock:

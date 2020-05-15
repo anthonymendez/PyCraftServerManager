@@ -23,7 +23,7 @@ from pexpect import popen_spawn
 from ..Configuration.WhitelistHandler import WhitelistHandler
 from ..Configuration.ServerPropertiesHandler import ServerPropertiesHandler
 from ..Configuration.LaunchOptionsHandler import LaunchOptionsHandler
-from ..Utilities.Utilities import *
+from ..Utilities.Utilities_ import *
 from ..Utilities.Scheduler import Scheduler
 from ..Utilities.Backup import *
 from ..Utilities.JarManager import *
