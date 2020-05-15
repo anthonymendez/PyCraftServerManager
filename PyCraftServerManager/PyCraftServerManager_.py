@@ -24,19 +24,6 @@ if is_windows():
     import colorama
     colorama.init()
 
-# If program is stopping to exit
-__stopping_all = True
-
-# List to hold input commands to run
-__cmd_input_queue = []
-
-# Lock for inserting and removing from input queue
-input_queue_lock = Lock()
-
-# Threads to handle input command
-user_input_loop = None
-input_queue_handler = None
-
 def init():
     """
     Starts PyCraftServerManager input thread.
@@ -154,8 +141,71 @@ def __input_command_handler(cmd_input):
     
     return False
 
+def get_server_runner_by_name(name):
+    """
+    Retrieves a server runner by name. None if not found.
+    """
+    for server_runner in __server_runners:
+        if server_runner.name == name:
+            return server_runner
+    # Server Runner not found
+    return None
+
+def get_server_runner_by_id(id):
+    """
+    Retrieves a server runner by id. None if not found.
+    """
+    for server_runner in __server_runners:
+        if server_runner.id == id:
+            return server_runner
+    # Server Runner not found
+    return None
+
+def backup(server_runner = None, name = None, id = None):
+    """
+    Backups server with the given name or id.
+    """
+    pass
+
 def exit():
     """
     Handles shutting off servers and exiting PyCraftServerManager.
     """
     pass
+
+def schedule():
+    """
+    Schedules command or function.
+    """
+    pass
+
+def jar():
+    """
+    Handles jar actions.
+    """
+    pass
+
+# If program is stopping to exit
+__stopping_all = True
+
+# List to hold input commands to run
+__cmd_input_queue = []
+
+# Lock for inserting and removing from input queue
+input_queue_lock = Lock()
+
+# Threads to handle input command
+user_input_loop = None
+input_queue_handler = None
+
+# List of ServerRunners
+__server_runners = []
+
+# PyCraftServerManager function names to functions
+commands_functions_dict = {
+    # Terminal Command: (fn pointer, argument count)
+    "backup": (backup, 1),
+    "exit": (exit, 0),
+    "schedule": (schedule, -1),
+    "jar": (jar, -1)
+}
