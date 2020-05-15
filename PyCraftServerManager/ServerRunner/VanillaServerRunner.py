@@ -39,7 +39,7 @@ class VanillaServerRunner:
     Server jar, and configuring the launch parameters.
     """
 
-    def __init__(self, server_folder, *args, **kwargs):
+    def __init__(self, server_folder, id_, name = None, *args, **kwargs):
         """
         Sets server folder location relative to python project.\n
         Example inputs:\n 
@@ -50,6 +50,10 @@ class VanillaServerRunner:
         self.server_process = None
         self.input_thread = None
         self.output_thread = None
+        self.id = id_
+        # Set name to server folder if it is None
+        if name == None:
+            name = server_folder
         # Handle optional arguments
         self.server_jar_filename = kwargs.get('server_jar_filename', "server.jar")
         # Set main directory of python project
