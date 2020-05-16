@@ -81,11 +81,27 @@ def push_to_input_queue(cmd_input):
 
     Returns bool on success.
     """
-    if not __stopping_all:
+    try:
+        if not __stopping_all:
+            with input_queue_lock:
+                __cmd_input_queue.append(cmd_input)
+            return True
+    except Exception as e:
+        logging.exception(e)
+        return False
+
+def prepend_to_input_queue(cmd_input):
+    """
+    Pushes command to the beginning of the input queue.
+
+    Returns bool on success.
+    """
+    try:
         with input_queue_lock:
-            __cmd_input_queue.append(cmd_input)
-        return True
-    else:
+            __cmd_input_queue.insert(0, cmd_input)
+            return True
+    except Exception as e:
+        logging.exception(e)
         return False
 
 def input_queue_handler_thread():
@@ -124,16 +140,45 @@ def __input_command_handler(cmd_input):
         logging.warning("Empty command passed in.")
         return True
 
-    is_specifying_server = "name" in cmd_input.split(" ")[0] or "id" in cmd_input.split(" ")[0]
+    cmd_input_split = cmd_input.split(" ")
+    is_specifying_server = "name" in cmd_input_split[0] or "id" in cmd_input_split[0]
     is_minecraft_command = cmd_input[0] == "/"
 
     if is_specifying_server:
         # Set temporary server runner to specified server
+        is_name_1 = "name" == cmd_input_split[0]
+        is_name_2 =  "name" == cmd_input_split[0].split("=")[0]
+        is_id_1 = "id" == cmd_input_split[0]
+        is_id_2 = "id" == cmd_input_split[0].split("=")[0]
+        if is_name_1 or is_name_2:
+            if is_name_1:
+                name = cmd_input_split[2]
+            else:
+                name = cmd_input_split[0].split("=")[1]
+            temp_server_runner = get_server_runner_by_name(name)
+        elif is_id_1 or is_id_2:
+            if is_id_1:
+                id_ = cmd_input_split[2]
+            else:
+                id_ = cmd_input_split[0].split("=")[1]
+            temp_server_runner = get_server_runner_by_id(id_)
+        else:
+            logging.warning("Invalid specify server command.")
+            return False
+
         # Push command back to the head of the input queue list
-        pass
+        if is_name_1 or is_id_1:
+            new_cmd_input = " ".join(cmd_input_split[3::])
+        else:
+            new_cmd_input = " ".join(cmd_input_split[1::])
+        return prepend_to_input_queue(new_cmd_input)
+
     elif is_minecraft_command:
         # Send minecraft command to temporary server runner
+        # temp_server_runner.send(cmd_input[1::])
+
         # Set temporary sesrver runner back to default
+        temp_server_runner = def_server_runner
         pass
     else:
         # Handle PyCraftServerManager command
@@ -200,6 +245,10 @@ input_queue_handler = None
 
 # List of ServerRunners
 __server_runners = []
+
+# Temporary and Default Server Runners
+temp_server_runner = None
+def_server_runner = None
 
 # PyCraftServerManager function names to functions
 commands_functions_dict = {
