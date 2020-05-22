@@ -68,12 +68,9 @@ class VanillaServerRunner:
             # Terminal Command: (fn pointer, argument count)
             "start": (self.start, 0), 
             "stop": (self.stop, 0), 
-            "restart": (self.restart, 0), 
-            "backup": (self.backup, 1),
+            "restart": (self.restart, 0),
             "exit": (self.exit, 0),
             "delete_user_cache": (self.delete_user_cache, 0),
-            "schedule": (self.schedule, -1),
-            "jar": (self.jar, -1),
             "launch_options": (self.launch_options, -1),
             "server_properties": (self.server_properties, -1),
             "whitelist": (self.whitelist, -1)
