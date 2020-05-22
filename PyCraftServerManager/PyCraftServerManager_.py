@@ -177,14 +177,68 @@ def __input_command_handler(cmd_input):
         # Send minecraft command to temporary server runner
         # temp_server_runner.send(cmd_input[1::])
 
-        # Set temporary sesrver runner back to default
+        # Set temporary server runner back to default
         temp_server_runner = def_server_runner
         pass
     else:
         # Handle PyCraftServerManager command
-        pass
+        try:
+            return handle_pycraftservermanager_command(cmd_input)
+        except Exception as e:
+            logging.exception(e)
+            return False
     
     return False
+
+def handle_server_command():
+    pass
+
+def handle_pycraftservermanager_command(cmd_input):
+    """
+    Handles input for launching PyCraftServerManager commands.
+    """
+    with pycraft_input_handler_lock:
+        logging.info("Command is a PyCraftServerManager command.")
+        cmd_input_args = cmd_input.split(" ")
+        command = cmd_input_args[0]
+        if command in commands_functions_dict:
+            print(colored("Command \"%s\" received!" % cmd_input, "green"))
+            fn = commands_functions_dict.get(command)[0]
+            if fn is None:
+                logging.warning("Command not programmed yet! Coming soon!")
+                print(colored("Command not programmed yet! Coming soon!", "yellow"))
+            else:
+                logging.debug("Given valid command.")
+                args_required = commands_functions_dict.get(command)[1]
+                if args_required == -1:
+                    fn_return = fn(cmd_input)
+                elif args_required == 0:
+                    fn_return = fn()
+                elif len(cmd_input_args) - 1 == args_required:
+                    fn_return = fn(cmd_input_args[1::])
+                else:
+                    logging.warning("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required))
+                    print(colored("Argument count not matched. Required %d. Received %d." % (len(cmd_input_args) - 1, args_required), "red"))
+
+                # Check what function returned if it did return anything
+                if isinstance(fn_return, bool):
+                    if not fn_return:
+                        logging.warning("Command \"%s\" did not run successfully." % cmd_input)
+                        print(colored("Command \"%s\" did not run successfully." % cmd_input, "red"))
+                    else:
+                        logging.debug("Command \"%s\" ran successfully." % cmd_input)
+                    
+                    return fn_return
+                
+                else:
+                    logging.warning("Command \"%s\" did not return bool." % str(cmd_input))
+                    print(colored("Command \"%s\" did not return bool." % str(cmd_input), "red"))
+                    return False
+
+        else:
+            logging.warning("Command not recognized.")
+            print(colored("Command not recognized.", "red"))
+            return False
 
 def get_server_runner_by_name(name):
     """
@@ -206,9 +260,11 @@ def get_server_runner_by_id(id):
     # Server Runner not found
     return None
 
-def backup(server_runner = None, name = None, id = None):
+def backup(server_runner = None, name = None, id = None, backup_all = False):
     """
-    Backups server with the given name or id.
+    Backups server with the given server runner object, name or id.
+
+    If backup_all is True, ignores all given conditions and backups all servers running.
     """
     pass
 
@@ -216,7 +272,8 @@ def exit():
     """
     Handles shutting off servers and exiting PyCraftServerManager.
     """
-    pass
+    for server_runner in __server_runners:
+        server_runner.stop()
 
 def schedule():
     """
@@ -238,6 +295,7 @@ __cmd_input_queue = []
 
 # Lock for inserting and removing from input queue
 input_queue_lock = Lock()
+pycraft_input_handler_lock = Lock()
 
 # Threads to handle input command
 user_input_loop = None
