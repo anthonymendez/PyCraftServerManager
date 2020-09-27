@@ -4,7 +4,7 @@ A Python wrapper for Minecraft Servers. Control your Minecraft Server through th
 
 # Features
 
-Note: When I say `terminal` or `command line`, I mean feature is accessible through the terminal/command line. When I say `Python`, you can launch the feature in a Python script.
+Note: When I say `terminal` or `command line`, I mean the feature is accessible through the terminal/command line. When I say `Python`, you can launch the feature in a Python script.
 
 * Start, Stop, Restart Server
 
