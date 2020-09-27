@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 
 import logging as log
 logging = log.getLogger(__name__)
@@ -26,7 +27,7 @@ class PaperMCServerDownloader():
         }
         logging.info("Exit")
 
-    def get_versions(self, jar_type):
+    def get_version_list(self, jar_type):
         if jar_type == "paper":
             r = requests.post(url=self.paper_url, headers=self.head)
         elif jar_type == "waterfall":
@@ -38,6 +39,9 @@ class PaperMCServerDownloader():
 
         paper_versions = json.loads(r.content)["versions"]
         return paper_versions
+
+    def get_latest_version(self, jar_type):
+        return self.get_version_list(jar_type)[0]
 
     def get_builds(self, jar_type, version):
         if version == None or version == "":
@@ -60,6 +64,40 @@ class PaperMCServerDownloader():
     def get_build_latest(self, jar_type, version):
         return self.get_builds(jar_type, version)["latest"]
 
-print(PaperMCServerDownloader("","","").get_versions("paper"))
+    def download_by_jar_version_build(self, jar_type, version, build):
+        if jar_type == "paper":
+            url = self.paper_url
+        elif jar_type == "waterfall":
+            url = self.waterfall_url
+        elif jar_type == "travertine":
+            url = self.travertine_url
+        else:
+            return 1
+
+        # TODO: Error checking
+
+        url += "/" + version + "/" + build + "/download"
+        jar_file = requests.get(url)
+        jar_file_name = "%s_%s_%s.jar" % (jar_type, version, build)
+        open(os.path.join(self.server_jars, jar_file_name), "wb").write(jar_file.content)
+
+    def download_by_jar_version_latest(self, jar_type, version):
+        build = self.get_build_latest(jar_type, version)
+        return self.download_by_jar_version_build(jar_type, version, build)
+
+    def download_by_jar_latest(self, jar_type):
+        version = self.get_latest_version(jar_type)
+        return self.download_by_jar_version_latest(jar_type, version)
+
+print(PaperMCServerDownloader("","","").get_version_list("paper"))
+print("")
+print(PaperMCServerDownloader("","","").get_latest_version("paper"))
+print("")
 print(PaperMCServerDownloader("","","").get_builds("paper", "1.16.3"))
+print("")
 print(PaperMCServerDownloader("","","").get_build_latest("paper", "1.16.3"))
+
+PaperMCServerDownloader("","","").download_by_jar_version_build("paper", "1.16.3", "191")
+PaperMCServerDownloader("","","").download_by_jar_version_latest("paper", "1.16.3")
+PaperMCServerDownloader("","","").download_by_jar_latest("waterfall")
+PaperMCServerDownloader("","","").download_by_jar_latest("travertine")
