@@ -17,6 +17,9 @@ def backup_as_zip(server_directory, archive_path):
     print(colored("Zip file created. Backing up server files.", "green"))
     # os.chdir(server_directory)
     for folder_name, subfolders, file_names in os.walk(server_directory):
+        # Don't backup the backups folder... obviously
+        if "backups" in folder_name:
+            break
         for file_name in file_names:
             # Create complete filepath of file in directory
             file_path = os.path.join(folder_name, file_name)
